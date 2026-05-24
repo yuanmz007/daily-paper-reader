@@ -4641,6 +4641,29 @@ article.markdown-section {
   vertical-align: middle;
 }
 
+.dpr-entry-daily-badge {
+  display: inline-block;
+  font-size: 10px;
+  border-radius: 999px;
+  padding: 0 6px;
+  line-height: 1.55;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-weight: 600;
+}
+
+.dpr-entry-daily-badge--active {
+  color: #26713d;
+  background: #edf9f0;
+  border: 1px solid #acd9b8;
+}
+
+.dpr-entry-daily-badge--off {
+  color: #8a7028;
+  background: #fff3c4;
+  border: 1px solid #e0d08a;
+}
+
 .dpr-entry-temp-badge {
   display: inline-block;
   font-size: 10px;

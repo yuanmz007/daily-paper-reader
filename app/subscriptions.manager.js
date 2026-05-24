@@ -521,7 +521,6 @@ window.SubscriptionsManager = (function () {
   };
   const getDailySelectedProfileTagsForRun = () =>
     getSelectedProfilesForRun()
-      .filter((profile) => !profile.temporary && !profile.paused)
       .map((profile) => normalizeText(profile && profile.tag))
       .filter(Boolean);
   const getProfilesForRun = () => {
@@ -534,16 +533,15 @@ window.SubscriptionsManager = (function () {
       selected: true,
     }));
   };
-  const isDailyRunnableProfile = (profile) => !!profile && !profile.temporary && !profile.paused;
   const renderProfilePicker = (targetEl, mode) => {
     if (!targetEl) return;
     const profiles = getProfilesForRun();
     const filtered = mode === 'daily'
-      ? profiles.filter(isDailyRunnableProfile)
+      ? profiles
       : profiles;
     if (!filtered.length) {
       targetEl.innerHTML = `<div class="dpr-profile-picker-empty">${
-        mode === 'daily' ? '暂无可抓取的常规词条。' : '暂无可检索的词条。'
+        mode === 'daily' ? '暂无可快速抓取的词条。' : '暂无可检索的词条。'
       }</div>`;
       return;
     }
@@ -588,7 +586,7 @@ window.SubscriptionsManager = (function () {
           normalizeText(profile.scope).toLowerCase() === 'conference'
         )
       );
-      if (mode === 'daily') return !isTemporary && !profile.paused;
+      if (mode === 'daily') return true;
       return true;
     }, selected);
   };
@@ -661,7 +659,7 @@ window.SubscriptionsManager = (function () {
   const refreshQuickRunButtons = () => {
     const selectedProfiles = getSelectedProfilesForRun();
     const selectedProfileCount = selectedProfiles.length;
-    const dailySelectedProfileCount = selectedProfiles.filter((profile) => !profile.temporary && !profile.paused).length;
+    const dailySelectedProfileCount = selectedProfileCount;
     const dailyBlocked = hasUnsavedChanges || dailySelectedProfileCount < 1;
     const conferenceBlocked =
       hasUnsavedChanges || selectedProfileCount < 1 || selectedConferenceYearPairs.size < 1;
@@ -682,15 +680,15 @@ window.SubscriptionsManager = (function () {
         } else if (btn === quickRunConferenceBtn && !selectedConferenceYearPairs.size) {
           title = '请先选择至少一个会议年份。';
         } else {
-          title = btn === quickRunConferenceBtn ? '请先选择至少一个会议年份。' : '仅会议和日常停用词条不参与日常抓取，请选择至少一个已启用的常规词条。';
+          title = btn === quickRunConferenceBtn ? '请先选择至少一个会议年份。' : '请先选择至少一个词条。';
         }
       }
       btn.title = title;
     });
     if (quickRunHintEl) {
       quickRunHintEl.textContent = dailySelectedProfileCount > 0
-        ? `已选 ${dailySelectedProfileCount} 个常规词条。`
-        : '请选择至少一个常规词条。';
+        ? `已选 ${dailySelectedProfileCount} 个词条。`
+        : '请选择至少一个词条。';
     }
     if (conferenceHintEl) {
       conferenceHintEl.textContent = selectedProfileCount > 0
@@ -831,7 +829,7 @@ window.SubscriptionsManager = (function () {
   const runSelectedQuickFetch = async (days, runOptions = {}) => {
     const tags = getDailySelectedProfileTagsForRun();
     if (!tags.length) {
-      setQuickRunMessage('请先勾选至少一个已启用的常规词条。仅会议和日常停用词条不会参与快速抓取。', '#c00');
+      setQuickRunMessage('请先勾选至少一个词条。快速抓取支持任意词条。', '#c00');
       refreshQuickRunButtons();
       return false;
     }
@@ -1213,7 +1211,7 @@ window.SubscriptionsManager = (function () {
             <div class="dpr-bulk-bar-head">
               <div>
                 <div class="chat-quick-run-title">快速抓取</div>
-                <div id="arxiv-admin-quick-run-hint" class="dpr-task-hint">默认全选常规词条。</div>
+                <div id="arxiv-admin-quick-run-hint" class="dpr-task-hint">默认全选词条，快速抓取不区分日常状态。</div>
               </div>
               <button id="arxiv-admin-open-workflow-panel-btn" class="arxiv-tool-btn dpr-task-workflow-btn" type="button">打开工作流</button>
             </div>

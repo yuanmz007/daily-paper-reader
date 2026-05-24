@@ -229,7 +229,7 @@ function testConferenceRunDisabledWhenUnsaved() {
   delete global.window.SubscriptionsSmartQuery;
 }
 
-async function testQuickFetchSkipsPausedAndConferenceOnlyProfiles() {
+async function testQuickFetchIncludesAnySelectedProfile() {
   const calls = [];
   const msgEl = {
     textContent: '',
@@ -256,15 +256,15 @@ async function testQuickFetchSkipsPausedAndConferenceOnlyProfiles() {
 
   assert.equal(await runSelectedQuickFetch(10), true);
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].options.dispatchInputs.profile_tag, 'ACTIVE');
+  assert.equal(calls[0].options.dispatchInputs.profile_tag, 'ACTIVE,PAUSED,CONF');
 
   global.window.SubscriptionsSmartQuery.getSelectedProfilesForRun = () => [
     { tag: 'PAUSED', temporary: false, paused: true },
     { tag: 'CONF', temporary: true, paused: false },
   ];
-  assert.equal(await runSelectedQuickFetch(10), false);
-  assert.equal(calls.length, 1);
-  assert.equal(msgEl.textContent, '请先勾选至少一个已启用的常规词条。仅会议和日常停用词条不会参与快速抓取。');
+  assert.equal(await runSelectedQuickFetch(10), true);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].options.dispatchInputs.profile_tag, 'PAUSED,CONF');
 
   __setQuickRunMsgEl(null);
   delete global.window.DPRWorkflowRunner;
@@ -280,7 +280,7 @@ async function testQuickFetchSkipsPausedAndConferenceOnlyProfiles() {
   testConferenceCurrentYearDisabledForPendingSources();
   testQuickRunUnsavedMessageClearsAfterSave();
   testConferenceRunDisabledWhenUnsaved();
-  await testQuickFetchSkipsPausedAndConferenceOnlyProfiles();
+  await testQuickFetchIncludesAnySelectedProfile();
 
   console.log('subscriptions manager tests passed');
 })().catch((error) => {

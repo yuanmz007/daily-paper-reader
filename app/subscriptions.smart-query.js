@@ -1963,8 +1963,10 @@ window.SubscriptionsSmartQuery = (function () {
           selected ? 'is-selected' : '',
           !selectable ? 'dpr-entry-card--selection-disabled' : '',
         ].filter(Boolean).join(' ');
-        const pausedBadge = isPaused ? '<span class="dpr-entry-paused-badge">日常停用</span>' : '';
-        const temporaryBadge = isTemporary ? '<span class="dpr-entry-temp-badge">仅会议</span>' : '';
+        const isDailyEnabled = !isTemporary && !isPaused;
+        const dailyBadge = isDailyEnabled
+          ? '<span class="dpr-entry-daily-badge dpr-entry-daily-badge--active">日常</span>'
+          : '<span class="dpr-entry-daily-badge dpr-entry-daily-badge--off">停用日常</span>';
         const selectionControl = `<span class="dpr-entry-select-dot" aria-hidden="true">${selected ? '✓' : ''}</span>`;
         return `
           <div class="${cardClass}" data-profile-id="${profileId}">
@@ -1972,8 +1974,7 @@ window.SubscriptionsSmartQuery = (function () {
               <div class="dpr-entry-headline">
                 ${selectionControl}
                 <span class="dpr-entry-title">${escapeHtml(p.tag || '')}</span>
-                ${pausedBadge}
-                ${temporaryBadge}
+                ${dailyBadge}
                 <span class="dpr-entry-desc-inline">${escapeHtml(p.description || '（无描述）')}</span>
                 <span class="dpr-entry-source-inline">${renderProfileSourceChips(p.paper_sources)}</span>
               </div>
