@@ -1,0 +1,621 @@
+{
+  "top_k": 200,
+  "generated_at": "2026-06-11T10:34:30.955190+00:00",
+  "papers": [
+    {
+      "id": "openreview-neurips-2025-x51kynijag",
+      "source": "NeurIPS-2025-Accepted",
+      "title": "TRAP: Targeted Redirecting of Agentic Preferences",
+      "abstract": "Autonomous agentic AI systems powered by vision-language models (VLMs) are rapidly advancing toward real-world deployment, yet their cross-modal reasoning capabilities introduce new attack surfaces for adversarial manipulation that exploit semantic reasoning across modalities. Existing adversarial attacks typically rely on visible pixel perturbations or require privileged model or environment access, making them impractical for stealthy, real-world exploitation. We introduce TRAP, a novel generative adversarial framework that manipulates\nthe agent’s decision-making using diffusion-based semantic injections into the vision-language embedding space. Our method combines negative prompt–based degradation with positive semantic optimization, guided by a Siamese semantic network and layout-aware spatial masking. Without requiring access to model internals, TRAP produces visually natural images yet induces consistent selection\nbiases in agentic AI systems. We evaluate TRAP on the Microsoft Common Objects in Context (COCO) dataset, building multi-candidate decision scenarios. Across these scenarios, TRAP consistently induces decision-level preference redirection on leading models, including LLaVA-34B, Gemma3, GPT-4o, and Mistral-3.2, significantly outperforming existing baselines such as SPSA, Bandit, and standard diffusion approaches. These findings expose a critical, generalized vulnerability: autonomous agents can be consistently misled through visually subtle, semantically-guided cross-modal manipulations. Overall, our results show the need for defense strategies beyond pixel-level robustness to address semantic vulnerabilities in cross-modal decision-making. The code for TRAP is accessible on GitHub at https://github.com/uiuc-focal-lab/TRAP.",
+      "authors": [
+        "Hangoo Kang",
+        "Jehyeok Yeon",
+        "Gagandeep Singh"
+      ],
+      "primary_category": "Agentic AI",
+      "categories": [
+        "Agentic AI",
+        "Trustworthy Machine Learning",
+        "Multimodal",
+        "Autonomous Decision Making",
+        "Large Language Model (LLM)",
+        "Vision Language Model (VLM))"
+      ],
+      "published": "2025-09-18T17:44:35.205+00:00",
+      "link": "https://openreview.net/forum?id=X51kYnijag",
+      "pdf_url": null,
+      "tags": [
+        "keyword:sem-vis-atk"
+      ]
+    },
+    {
+      "id": "openreview-neurips-2025-lz4ikybwwl",
+      "source": "NeurIPS-2025-Accepted",
+      "title": "HQA-VLAttack: Towards High Quality Adversarial Attack on Vision-Language Pre-Trained Models",
+      "abstract": "Black-box adversarial attack on vision-language pre-trained models is a practical and challenging task, as text and image perturbations need to be considered simultaneously, and only the predicted results are accessible. Research on this problem is in its infancy, and only a handful of methods are available. Nevertheless, existing methods either rely on a complex iterative cross-search strategy, which inevitably consumes numerous queries, or only consider reducing the similarity of positive image-text pairs but ignore that of negative ones, which will also be implicitly diminished, thus inevitably affecting the attack performance. To alleviate the above issues, we propose a simple yet effective framework to generate high-quality adversarial examples on vision-language pre-trained models, named HQA-VLAttack, which consists of text and image attack stages. For text perturbation generation, it leverages the counter-fitting word vector to generate the substitute word set, thus guaranteeing the semantic consistency between the substitute word and the original word. For image perturbation generation, it first initializes the image adversarial example via the layer-importance guided strategy, and then utilizes contrastive learning to optimize the image adversarial perturbation, which ensures that the similarity of positive image-text pairs is decreased while that of negative image-text pairs is increased. In this way, the optimized adversarial images and texts are more likely to retrieve negative examples, thereby enhancing the attack success rate. Experimental results on three benchmark datasets demonstrate that HQA-VLAttack significantly outperforms strong baselines in terms of attack success rate.",
+      "authors": [
+        "Han Liu",
+        "Jiaqi Li",
+        "Zhi Xu",
+        "Xiaotong Zhang",
+        "Xiaoming Xu",
+        "Fenglong Ma",
+        "Yuanman Li",
+        "Hong Yu"
+      ],
+      "primary_category": "Adversarial Attack",
+      "categories": [
+        "Adversarial Attack",
+        "Vision-Language Pre-Trained Models"
+      ],
+      "published": "2025-09-18T17:40:53.384+00:00",
+      "link": "https://openreview.net/forum?id=LZ4IKybwWl",
+      "pdf_url": null,
+      "tags": [
+        "keyword:sem-vis-atk",
+        "query:sem-vis-atk"
+      ]
+    },
+    {
+      "id": "openreview-neurips-2025-9xxjwwaouf",
+      "source": "NeurIPS-2025-Accepted",
+      "title": "A Frustratingly Simple Yet Highly Effective Attack Baseline: Over 90% Success Rate Against the Strong Black-box Models of GPT-4.5/4o/o1",
+      "abstract": "Despite promising performance on open-source large vision-language models (LVLMs), transfer-based targeted attacks often fail against closed-source commercial LVLMs. Analyzing failed adversarial perturbations reveals that the learned perturbations typically originate from a uniform distribution and lack clear semantic details, resulting in unintended responses. This critical absence of semantic information leads commercial black-box LVLMs to either ignore the perturbation entirely or misinterpret its embedded semantics, thereby causing the attack to fail. To overcome these issues, we propose to refine semantic clarity by encoding explicit semantic details within local regions, thus ensuring the capture of finer-grained features and inter-model transferability, and by concentrating modifications on semantically rich areas rather than applying them uniformly. To achieve this, we propose  *a simple yet highly effective baseline*: at each optimization step, the adversarial image is cropped randomly by a controlled aspect ratio and scale, resized, and then aligned with the target image in the embedding space. While the naive source-target matching method has been utilized before in the literature, we are the first to provide a tight analysis, which establishes a close connection between perturbation optimization and semantics. Experimental results confirm our hypothesis. Our adversarial examples crafted with local-aggregated perturbations focused on crucial regions exhibit surprisingly good transferability to commercial LVLMs, including GPT-4.5, GPT-4o, Gemini-2.0-flash, Claude-3.5/3.7-sonnet, and even reasoning models like o1, Claude-3.7-thinking and Gemini-2.0-flash-thinking. Our approach achieves success rates exceeding 90\\% on GPT-4.5, 4o, and o1, significantly outperforming all prior state-of-the-art attack methods with lower $\\ell_1/\\ell_2$ perturbations. Our optimized adversarial examples under different configurations are available at https://huggingface.co/datasets/MBZUAI-LLM/M-Attack_AdvSamples and our training code at https://github.com/VILA-Lab/M-Attack.",
+      "authors": [
+        "Zhaoyi Li",
+        "Xiaohan Zhao",
+        "Dong-Dong Wu",
+        "Jiacheng Cui",
+        "Zhiqiang Shen"
+      ],
+      "primary_category": "Adversraial Attack",
+      "categories": [
+        "Adversraial Attack",
+        "Local-level Matching",
+        "Vision-Language Models"
+      ],
+      "published": "2025-09-18T17:37:57.717+00:00",
+      "link": "https://openreview.net/forum?id=9xXjWwAoUF",
+      "pdf_url": null,
+      "tags": [
+        "keyword:sem-vis-atk",
+        "query:sem-vis-atk"
+      ]
+    },
+    {
+      "id": "openreview-neurips-2025-kitpsotbuo",
+      "source": "NeurIPS-2025-Accepted",
+      "title": "Exploring Semantic-constrained Adversarial  Example with Instruction Uncertainty Reduction",
+      "abstract": "Recently, semantically constrained adversarial examples (SemanticAE), which are directly generated from natural language instructions, have become a promising avenue for future research due to their flexible attacking forms, but have not been thoroughly explored yet.\nTo generate SemanticAEs, current methods fall short of satisfactory attacking ability as the key underlying factors of semantic uncertainty in human instructions, such as $\\textit{referring diversity}$, $\\textit{descriptive incompleteness}$, and $\\textit{boundary ambiguity}$, have not been fully investigated.\nTo tackle the issues, this paper develops a multi-dimensional $\\textbf{ins}$truction $\\textbf{u}$ncertainty $\\textbf{r}$eduction ($\\textbf{InSUR}$) framework to generate more satisfactory SemanticAE, $\\textit{i.e.}$, transferable, adaptive, and effective.\nSpecifically, in the dimension of the sampling method, we propose the residual-driven attacking direction stabilization to alleviate the unstable adversarial optimization caused by the diversity of language references.\nBy coarsely predicting the language-guided sampling process, the optimization process will be stabilized by the designed ResAdv-DDIM sampler‌, therefore releasing the transferable and robust adversarial capability of multi-step diffusion models.\nIn task modeling, we propose the context-encoded attacking scenario constraint to supplement the missing knowledge from incomplete human instructions.\nGuidance masking and renderer integration are proposed to regulate the constraints of 2D/3D SemanticAE, activating stronger scenario-adapted attacks.\nMoreover, in the dimension of generator evaluation, we propose the semantic-abstracted attacking evaluation enhancement by clarifying the evaluation boundary based on the label taxonomy, facilitating the development of more effective SemanticAE generators.\nExtensive experiments demonstrate the superiority of the transfer attack performance of InSUR.\nBesides, it is worth highlighting that we realize the reference-free generation of semantically constrained 3D adversarial examples by utilizing language-guided 3D generation models for the first time.",
+      "authors": [
+        "Jin Hu",
+        "Jiakai Wang",
+        "linna Jing",
+        "Haolin Li",
+        "Haodong Liu",
+        "Haotong Qin",
+        "Aishan Liu",
+        "Ke Xu",
+        "Xianglong Liu"
+      ],
+      "primary_category": "Adversarial Example",
+      "categories": [
+        "Adversarial Example",
+        "Generative Models"
+      ],
+      "published": "2025-09-18T17:29:03.084+00:00",
+      "link": "https://openreview.net/forum?id=kITPSoTBUo",
+      "pdf_url": null,
+      "tags": [
+        "keyword:sem-vis-atk",
+        "query:sem-vis-atk"
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "type": "intent_query",
+      "tag": "sem-vis-atk",
+      "paper_tag": "query:sem-vis-atk",
+      "query_text": "adversarial attacks on vision language models that edit visual semantics such as objects and scenes to produce incorrect outputs",
+      "sim_scores": {
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-neurips-2025-lz4ikybwwl",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-neurips-2025-x51kynijag",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-neurips-2025-9xxjwwaouf",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-kitpsotbuo",
+          "score": 0.15469146238377016,
+          "star_rating": 3
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "sem-vis-atk",
+      "paper_tag": "query:sem-vis-atk",
+      "query_text": "methods for generating semantic adversarial examples against multimodal large language models by manipulating image content",
+      "sim_scores": {
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.012658227848101266,
+          "rank": 19
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-neurips-2025-x51kynijag",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-neurips-2025-kitpsotbuo",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-lz4ikybwwl",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-9xxjwwaouf",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "sem-vis-atk",
+      "paper_tag": "query:sem-vis-atk",
+      "query_text": "non pixel attacks that alter human interpretable visual features to fool vision language pretraining models",
+      "sim_scores": {
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-neurips-2025-lz4ikybwwl",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-neurips-2025-x51kynijag",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-neurips-2025-9xxjwwaouf",
+          "score": 0.5495495495495496,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-kitpsotbuo",
+          "score": 0.0,
+          "star_rating": 1
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "sem-vis-atk",
+      "paper_tag": "query:sem-vis-atk",
+      "query_text": "semantic level visual attacks that cause hallucination or misclassification in multimodal models",
+      "sim_scores": {
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.013513513513513514,
+          "rank": 14
+        },
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.012195121951219513,
+          "rank": 22
+        },
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.011363636363636364,
+          "rank": 28
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-neurips-2025-x51kynijag",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-9xxjwwaouf",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-neurips-2025-lz4ikybwwl",
+          "score": 0.3910256410256411,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-neurips-2025-kitpsotbuo",
+          "score": 0.3433395872420263,
+          "star_rating": 3
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "adversarial attacks that manipulate semantic visual content such as objects, attributes, or scenes in images to fool vision-language models",
+      "sim_scores": {
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "adversarial examples created by modifying visual semantics to mislead multimodal large language models",
+      "sim_scores": {
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "attacks targeting vision-language models that exploit human-interpretable visual modifications",
+      "sim_scores": {
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.011904761904761904,
+          "rank": 24
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "fine-grained visual perturbation",
+      "sim_scores": {}
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "inducing visual hallucinations in multimodal models by modifying image content semantically",
+      "sim_scores": {}
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "multimodal adversarial example",
+      "sim_scores": {}
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "semantic visual attack",
+      "sim_scores": {
+        "openreview-neurips-2025-x51kynijag": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "semantic-level perturbations to images for attacking vision-language models",
+      "sim_scores": {
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-neurips-2025-kitpsotbuo": {
+          "score": 0.01020408163265306,
+          "rank": 38
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "vision-language model attack",
+      "sim_scores": {
+        "openreview-neurips-2025-lz4ikybwwl": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-neurips-2025-9xxjwwaouf": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-neurips-2025-x51kynijag": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "sem-vis-atk",
+      "paper_tag": "keyword:sem-vis-atk",
+      "query_text": "visual concept attack",
+      "sim_scores": {}
+    }
+  ],
+  "global_candidate_ids": [
+    "openreview-neurips-2025-7g9ykty2uz",
+    "openreview-neurips-2025-tyw1v1kukg",
+    "openreview-neurips-2025-kn0aymyw0v",
+    "openreview-neurips-2025-lz4ikybwwl",
+    "openreview-neurips-2025-bbwrp6o8lm",
+    "openreview-neurips-2025-wk5jqiwitw",
+    "openreview-neurips-2024-wbe0qcbwji",
+    "openreview-neurips-2024-gdpwypoce1",
+    "openreview-neurips-2025-m7zebdamsh",
+    "openreview-neurips-2025-dt5vrmujav",
+    "openreview-neurips-2025-qukhz3fcgx",
+    "openreview-neurips-2025-x51kynijag",
+    "openreview-neurips-2025-yg1yfakolw",
+    "openreview-neurips-2025-418uyqkgqb",
+    "openreview-neurips-2024-udxe5v2d0o",
+    "openreview-neurips-2024-ynx7ai4zts",
+    "openreview-neurips-2025-9xxjwwaouf",
+    "openreview-neurips-2025-vpzxyuon8j",
+    "openreview-neurips-2024-9umjecuekk",
+    "openreview-neurips-2025-laflniluwx",
+    "openreview-neurips-2025-it0kkaffpk",
+    "openreview-neurips-2025-kkonozwvsu",
+    "openreview-neurips-2025-ror5izcwjx",
+    "openreview-neurips-2025-kitpsotbuo",
+    "openreview-neurips-2024-n9xvaqmjnk",
+    "openreview-neurips-2025-zw2badjkgu",
+    "openreview-neurips-2025-4gytbgbvsb",
+    "openreview-neurips-2025-t77ezljvd5",
+    "openreview-neurips-2025-n0i0ivdfb3",
+    "openreview-neurips-2025-facj0478oq",
+    "openreview-neurips-2024-cirpe1bsmv",
+    "openreview-neurips-2025-tmlseytg1k",
+    "openreview-neurips-2025-reahulrjzr",
+    "openreview-neurips-2025-v31jzdddts",
+    "openreview-neurips-2025-gdyw9m5juh",
+    "openreview-neurips-2025-okf5ssuhjf",
+    "openreview-neurips-2025-yzl5tl0z2m",
+    "openreview-neurips-2024-gxmfnarldp",
+    "openreview-neurips-2024-nv2qt5cj1a",
+    "openreview-neurips-2025-tdtelvnag4",
+    "openreview-neurips-2025-psps5w3mc8",
+    "openreview-neurips-2025-3l1sgjh3li",
+    "openreview-neurips-2025-kamsbarp3w",
+    "openreview-neurips-2025-gm65gk3uoj",
+    "openreview-neurips-2024-w67vrhzf13",
+    "openreview-neurips-2024-sppab1tmlc",
+    "openreview-neurips-2025-ktc3cdu320",
+    "openreview-neurips-2024-snz7tptch6",
+    "openreview-neurips-2025-dsuk4xql8z",
+    "openreview-neurips-2025-8mfvirtr7i",
+    "openreview-neurips-2025-on22rx5a4f",
+    "openreview-neurips-2025-w5hnif2jla",
+    "openreview-neurips-2025-x2bsidjjjw",
+    "openreview-neurips-2025-fg9hufti0k",
+    "openreview-neurips-2025-o4mwsih1vs",
+    "openreview-neurips-2024-hauneixgq7",
+    "openreview-neurips-2024-nsxthtvpqa",
+    "openreview-neurips-2025-ilr4unizcq",
+    "openreview-neurips-2025-wh3f1zok70",
+    "openreview-neurips-2024-znqhm0a35e",
+    "openreview-neurips-2024-dkpmfiydrf",
+    "openreview-neurips-2025-1sb0363f2y",
+    "openreview-neurips-2024-vwgwbcxeaq",
+    "openreview-neurips-2025-plbvtjt4td",
+    "openreview-neurips-2025-1mokb8ohoq",
+    "openreview-neurips-2024-teqvz5ali8",
+    "openreview-neurips-2025-us4wmg7pme",
+    "openreview-neurips-2025-yjpbve4vfo",
+    "openreview-neurips-2024-knrwafei1u",
+    "openreview-neurips-2025-zo8lycizx9",
+    "openreview-neurips-2025-hrbhnqkg03",
+    "openreview-neurips-2025-crpljvwhhs",
+    "openreview-neurips-2025-ibww1dxqaa",
+    "openreview-neurips-2025-payykls0wd",
+    "openreview-neurips-2025-tiw29ipcwg",
+    "openreview-neurips-2024-ljndqvcre9",
+    "openreview-neurips-2025-8flpo0zaao",
+    "openreview-neurips-2024-g6nn2aijdp",
+    "openreview-neurips-2025-6uwv6ytamu",
+    "openreview-neurips-2025-ioo3njtvby",
+    "openreview-neurips-2024-pqi4vqbyxw",
+    "openreview-neurips-2025-hmlugomsek",
+    "openreview-neurips-2024-dq9ji8e9qq",
+    "openreview-neurips-2025-7mtecprtll",
+    "openreview-neurips-2025-kc1wtxzbrp",
+    "openreview-neurips-2024-wy3xgxizur",
+    "openreview-neurips-2024-fcuyz33oed",
+    "openreview-neurips-2025-3xmr8wtald",
+    "openreview-neurips-2025-aj7adfofij",
+    "openreview-neurips-2025-kzu33wr875",
+    "openreview-neurips-2024-jbf3eiyd2x",
+    "openreview-neurips-2025-bjohb7in6b",
+    "openreview-neurips-2024-irxypm9ipw",
+    "openreview-neurips-2025-secbuzys5c",
+    "openreview-neurips-2024-ao5mjduhpr",
+    "openreview-neurips-2025-ll29pmm3uh",
+    "openreview-neurips-2024-xprui8amtc",
+    "openreview-neurips-2025-nkpud1jnyt",
+    "openreview-neurips-2025-rud3m6wlxh",
+    "openreview-neurips-2025-selyldhzk2",
+    "openreview-neurips-2024-diktpsgk4f",
+    "openreview-neurips-2025-0qgtartsco",
+    "openreview-neurips-2024-fyfliutfhx",
+    "openreview-neurips-2024-jhqyeppmid",
+    "openreview-neurips-2025-ba02dmqn5d",
+    "openreview-neurips-2025-7ntwocejgk",
+    "openreview-neurips-2025-7jjs2cdbyn",
+    "openreview-neurips-2025-jmlcbleec4",
+    "openreview-neurips-2024-yql5tutdah",
+    "openreview-neurips-2024-9ghsop1lyh",
+    "openreview-neurips-2024-kppbawjbry",
+    "openreview-neurips-2024-sf2glfhvss",
+    "openreview-neurips-2025-qnnjudanhb",
+    "openreview-neurips-2025-aahhmr0tx9",
+    "openreview-neurips-2025-tonrhqx6xq",
+    "openreview-neurips-2024-ql4nn6ew7u",
+    "openreview-neurips-2025-qh2xglgobm",
+    "openreview-neurips-2025-2lfzdy2ldo",
+    "openreview-neurips-2025-gowqpdblrb",
+    "openreview-neurips-2024-fmrnus3d0n"
+  ],
+  "global_pool_lane_top_k": 30,
+  "global_pool_limit": 120,
+  "global_pool_guaranteed_per_lane": 2,
+  "global_pool_effective_size": 120,
+  "reranked_at": "2026-06-11T10:35:41.194673+00:00",
+  "llm_ranked": [
+    {
+      "paper_id": "openreview-neurips-2025-x51kynijag",
+      "score": 10.0,
+      "evidence_en": "diffusion-based semantic injections to manipulate VLM agent's decision-making",
+      "evidence_cn": "基于扩散的语义注入操控视觉语言模型智能体的决策",
+      "canonical_evidence": "基于扩散的语义注入操控视觉语言模型智能体的决策",
+      "tldr_en": "TRAP is a generative adversarial framework that uses diffusion-based semantic injections into the vision-language embedding space to stealthily redirect the preferences of VLM-powered agents without visible pixel perturbations.",
+      "tldr_cn": "现有视觉语言模型对抗攻击多依赖可见像素扰动或需白盒访问，难以实际部署。TRAP提出基于扩散的生成式对抗框架，通过负向提示退化与正向语义优化，在视觉-语言嵌入空间进行语义注入，隐蔽重定向智能体决策偏好。实验表明该方法可在不引入可见噪声的条件下有效操控VLM驱动的自主智能体，为多模态安全评估提供新攻击范式。",
+      "title_zh": "TRAP：定向重定向智能体偏好",
+      "motivation_cn": "现有针对视觉语言模型的对抗攻击依赖可见像素扰动或需要特权访问，难以在实际场景中隐蔽实施。",
+      "method_cn": "提出TRAP框架，结合负向提示退化与正向语义优化，在扩散模型的视觉-语言嵌入空间中注入语义扰动。",
+      "result_cn": "该方法实现了对VLM智能体决策偏好的隐蔽操控，避免了可见像素修改。",
+      "conclusion_cn": "TRAP验证了通过语义级注入可有效操纵多模态模型的行为，为实际场景下的对抗攻击提供了新思路。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:sem-vis-atk",
+      "matched_query_text": "adversarial attacks that manipulate semantic visual content such as objects, attributes, or scenes in images to fool vision-language models"
+    },
+    {
+      "paper_id": "openreview-neurips-2025-9xxjwwaouf",
+      "score": 9.0,
+      "evidence_en": "Encodes explicit semantic details into local regions of adversarial perturbations to attack LVLMs",
+      "evidence_cn": "在对抗扰动局部区域编码明确语义细节以攻击LVLM",
+      "canonical_evidence": "在对抗扰动局部区域编码明确语义细节以攻击LVLM",
+      "tldr_en": "The paper proposes a simple attack baseline that enhances semantic clarity in adversarial perturbations, achieving over 90% success against black-box LVLMs like GPT-4.5 by encoding explicit semantics locally.",
+      "tldr_cn": "针对面向黑盒大视觉语言模型的迁移攻击成功率低的问题，本文提出通过精炼语义清晰度、在局部区域编码显式语义细节的简单攻击基线方法，实现对GPT-4.5等模型超90%的成功率，表明语义信息对黑盒攻击的关键作用。",
+      "title_zh": "一种简单却高效的攻击基线：对GPT-4.5/4o/o1等强黑盒模型超过90%成功率",
+      "motivation_cn": "现有迁移攻击因缺乏语义信息导致黑盒商用LVLM攻击失败，需要增强对抗扰动的语义清晰度。",
+      "method_cn": "提出在对抗扰动的局部区域编码显式语义细节，精炼语义清晰度的攻击方法。",
+      "result_cn": "在GPT-4.5等强黑盒模型上达到超过90%的攻击成功率。",
+      "conclusion_cn": "语义清晰度对黑盒LVLM攻击至关重要，简单方法即可显著提升攻击效果。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:sem-vis-atk",
+      "matched_query_text": "adversarial attacks that manipulate semantic visual content such as objects, attributes, or scenes in images to fool vision-language models"
+    },
+    {
+      "paper_id": "openreview-neurips-2025-kitpsotbuo",
+      "score": 9.0,
+      "evidence_en": "generates SemanticAE from natural language instructions with multi-dimensional uncertainty reduction",
+      "evidence_cn": "从自然语言指令生成语义约束对抗样本, 通过多维度不确定性降低提升攻击性",
+      "canonical_evidence": "从自然语言指令生成语义约束对抗样本, 通过多维度不确定性降低提升攻击性",
+      "tldr_en": "Proposes InSUR framework to generate semantically constrained adversarial examples by reducing referring, descriptive, and boundary uncertainties in instructions.",
+      "tldr_cn": "本文针对从自然语言指令生成语义约束对抗样本(SemanticAE)任务, 提出多维指令不确定性降低框架InSUR, 解决指令中的指代多样性、描述不完整性和边界模糊性等关键因素, 显著提升攻击能力, 为语义级对抗攻击提供了新方法论。",
+      "title_zh": "探索基于指令不确定性降低的语义约束对抗样本",
+      "motivation_cn": "现有语义对抗样本生成方法对指令语义不确定性利用不足, 攻击能力有限。",
+      "method_cn": "提出InSUR框架, 通过降低指代多样性、描述不完整性、边界模糊性等多维不确定性来生成更强攻击性样本。",
+      "result_cn": "生成的语义对抗样本在攻击成功率上显著超越现有方法, 验证了指令不确定性降低的有效性。",
+      "conclusion_cn": "为灵活且可控的语义对抗攻击拓展了研究空间, 并揭示了指令语义不确定性在攻击中的关键作用。",
+      "matched_requirement_id": "req-7",
+      "matched_query_tag": "query:sem-vis-atk",
+      "matched_query_text": "methods for generating semantic adversarial examples against multimodal large language models by manipulating image content"
+    },
+    {
+      "paper_id": "openreview-neurips-2025-lz4ikybwwl",
+      "score": 5.0,
+      "evidence_en": "adversarial attack on vision-language pre-trained models",
+      "evidence_cn": "对视觉语言预训练模型的对抗攻击",
+      "canonical_evidence": "对视觉语言预训练模型的对抗攻击",
+      "tldr_en": "HQA-VLAttack proposes a black-box attack framework for vision-language pre-trained models that balances positive and negative image-text pair similarities to generate high-quality adversarial examples with fewer queries.",
+      "tldr_cn": "HQA-VLAttack针对视觉语言预训练模型的黑盒攻击，提出一种简单有效的框架，通过同时考虑正负图像-文本对相似度，生成高质量对抗样本，在降低查询成本的同时保持攻击效果。",
+      "title_zh": "HQA-VLAttack: 面向视觉语言预训练模型的高质量对抗攻击",
+      "motivation_cn": "现有黑盒攻击方法查询成本高或忽视负样本对，制约攻击性能。",
+      "method_cn": "提出HQA-VLAttack框架，平衡正负对相似度以生成高质量对抗样本。",
+      "result_cn": "实验表明该方法在攻击成功率和查询效率上优于现有方法。",
+      "conclusion_cn": "为视觉语言预训练模型的安全评估提供了新的高效攻击手段。",
+      "matched_requirement_id": "req-composite-sem-vis-atk",
+      "matched_query_tag": "query:sem-vis-atk:composite",
+      "matched_query_text": "Papers central to 搜索2025-2026年针对多模态模型的语义级视觉攻击论文。目标论文通过操纵人类可解释的视觉语义（如对象、属性、关系、场景、局部概念或细粒度图像内容）攻击VLMs、LVLMs或MLLMs。优先考虑非进化方法，生成或编辑语义视觉内容以误导模型输出，如字幕、VQA答案、识别、幻觉或视觉推理。排除主要基于OCR文本、印刷提示、隐藏指令、隐写术、代码截图、漫画、文本越狱、纯像素噪声、综述、基准或仅防御方法的论文。, especially work that connects or combines: adversarial attacks that manipulate semantic visual content such as objects, attributes, or scenes in images to fool vision-language models; attacks targeting vision-language models that exploit human-interpretable visual modifications; adversarial examples created by modifying visual semantics to mislead multimodal large language models; inducing visual hallucinations in multimodal models by modifying image content semantically; semantic-level perturbations to images for attacking vision-language models; adversarial attacks on vision language models that edit visual semantics such as objects and scenes to produce incorrect outputs; methods for generating semantic adversarial examples against multimodal large language models by manipulating image content; semantic level visual attacks that cause hallucination or misclassification in multimodal models; non pixel attacks that alter human interpretable visual features to fool vision language pretraining models."
+    }
+  ],
+  "llm_ranked_at": "2026-06-11T10:40:27.380185+00:00",
+  "display_min_score": 4.0,
+  "pruned_at": "2026-06-11T10:40:27.421451+00:00"
+}
