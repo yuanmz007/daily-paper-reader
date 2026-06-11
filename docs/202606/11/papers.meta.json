@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-11",
+  "date": "2026-06-11",
+  "generated_at": "2026-06-11T21:15:44",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/11/2606.10571v1-improving-adversarial-transferability-on-vision-language-pre-training-models-via-surrogate-specific-bias-correction",
+      "section": "deep",
+      "title_en": "Improving Adversarial Transferability on Vision-Language Pre-training Models via Surrogate-Specific Bias Correction",
+      "authors": "Lijia Yu, Jiuxin Cao, Yuchen Qiang, Changhao Chen, Yifei Huang, Bo Liu",
+      "date": "2026-06-09",
+      "pdf": "https://arxiv.org/pdf/2606.10571v1",
+      "score": "8.0",
+      "evidence": "提出针对视觉语言预训练模型的对抗样本迁移性增强方法",
+      "tldr": "视觉语言预训练模型面临对抗迁移攻击性能受限问题，现有方法依赖代理模型，其优化过程产生的代理特定偏差降低跨模型迁移性。本文提出DeBias-Attack，通过双分支扰动分别从原图和弱语义图估计主梯度和偏差参考梯度，并利用梯度投影校正偏差，从而提升对抗样本迁移性。实验在多种VLP模型、下游任务和开源/闭源多模态大语言模型上取得显著迁移攻击效果。该工作首次通过梯度校正纠正代理特定偏差，为黑盒迁移攻击提供新思路。",
+      "tags": "query:vlm-adv-eval",
+      "abstract_en": "Adversarial examples reveal vulnerabilities in Vision-Language Pre-training (VLP) models and provide insights for improving robustness. A key property is cross-model transferability, which enables transfer-based black-box attacks. However, existing attacks often rely heavily on the surrogate model, causing cross-model performance drops. One reason is that adversarial optimization may follow surrogate model responses more than input semantics, making the update direction effective on the surrogate but less transferable to unseen targets. We refer to this dependency as surrogate-specific bias. Motivated by this observation, DeBias-Attack improves transferability by correcting surrogate-specific bias in adversarial optimization directions. It maintains two perturbation branches. The main branch optimizes a perturbation on the original image and obtains the adversarial gradient used to disrupt image-text alignment. The reference branch optimizes a perturbation on a weak-semantic image constructed from the dataset mean image with small Gaussian noise resampled at each iteration. Since this weak-semantic image contains little clear visual content, its optimization reflects surrogate responses more than image semantics, and its reference gradient estimates surrogate-specific bias. DeBias-Attack removes the aligned projection of the main gradient on the reference gradient before updating the adversarial image, then performs context-aware text substitution using the updated adversarial image. DeBias-Attack is the first transfer-based VLP attack that corrects surrogate-specific bias through gradient correction. Experiments show strong performance across VLP models, downstream tasks, and open-source and closed-source multimodal large language models.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,58 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-11T21:14:20.204294+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2606.10571v1",
+      "source": "arxiv",
+      "title": "Improving Adversarial Transferability on Vision-Language Pre-training Models via Surrogate-Specific Bias Correction",
+      "abstract": "Adversarial examples reveal vulnerabilities in Vision-Language Pre-training (VLP) models and provide insights for improving robustness. A key property is cross-model transferability, which enables transfer-based black-box attacks. However, existing attacks often rely heavily on the surrogate model, causing cross-model performance drops. One reason is that adversarial optimization may follow surrogate model responses more than input semantics, making the update direction effective on the surrogate but less transferable to unseen targets. We refer to this dependency as surrogate-specific bias. Motivated by this observation, DeBias-Attack improves transferability by correcting surrogate-specific bias in adversarial optimization directions. It maintains two perturbation branches. The main branch optimizes a perturbation on the original image and obtains the adversarial gradient used to disrupt image-text alignment. The reference branch optimizes a perturbation on a weak-semantic image constructed from the dataset mean image with small Gaussian noise resampled at each iteration. Since this weak-semantic image contains little clear visual content, its optimization reflects surrogate responses more than image semantics, and its reference gradient estimates surrogate-specific bias. DeBias-Attack removes the aligned projection of the main gradient on the reference gradient before updating the adversarial image, then performs context-aware text substitution using the updated adversarial image. DeBias-Attack is the first transfer-based VLP attack that corrects surrogate-specific bias through gradient correction. Experiments show strong performance across VLP models, downstream tasks, and open-source and closed-source multimodal large language models.",
+      "authors": [
+        "Lijia Yu",
+        "Jiuxin Cao",
+        "Yuchen Qiang",
+        "Changhao Chen",
+        "Yifei Huang",
+        "Bo Liu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-06-09T08:34:01+00:00",
+      "link": "https://arxiv.org/pdf/2606.10571v1",
+      "tags": [
+        "keyword:sem-vis-atk",
+        "query:sem-vis-atk"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Proposes adversarial attack method to improve transferability on vision-language pre-training models",
+      "llm_evidence_cn": "提出针对视觉语言预训练模型的对抗样本迁移性增强方法",
+      "llm_evidence": "提出针对视觉语言预训练模型的对抗样本迁移性增强方法",
+      "canonical_evidence": "提出针对视觉语言预训练模型的对抗样本迁移性增强方法",
+      "llm_tldr_en": "Proposes DeBias-Attack to improve black-box adversarial transferability by correcting surrogate-specific bias in adversarial optimization, achieving higher cross-model attack success rates on VLP models.",
+      "llm_tldr_cn": "现有对抗攻击在跨模型迁移时因代理模型偏差导致性能下降。本文提出 DeBias-Attack，通过校正代理特定偏差来改善对抗样本的迁移性，在视觉语言预训练模型上实现更高黑盒攻击成功率，为 VLP 模型安全评估提供有效工具。该方法通过引入偏差校正模块，使对抗扰动更关注通用语义特征，从而在多个 VLP 模型上显著提升攻击迁移性。",
+      "llm_tldr": "现有对抗攻击在跨模型迁移时因代理模型偏差导致性能下降。本文提出 DeBias-Attack，通过校正代理特定偏差来改善对抗样本的迁移性，在视觉语言预训练模型上实现更高黑盒攻击成功率，为 VLP 模型安全评估提供有效工具。该方法通过引入偏差校正模块，使对抗扰动更关注通用语义特征，从而在多个 VLP 模型上显著提升攻击迁移性。",
+      "llm_tags": [
+        "query:vlm-adv-eval:composite"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval:composite",
+      "matched_query_text": "Papers central to 搜索2024-2026年针对视觉语言模型（VLM、VLP、LVLM、MLLM）的对抗攻击或鲁棒性评估论文，优先考虑以人类可解释方式操纵或生成视觉输入的方法，如语义概念、对象、属性、关系、场景、光照、风格、背景、局部区域或细粒度视觉内容。排斥基于OCR文本、印刷提示、隐藏指令、隐写术、代码截图、纯文本越狱、综述、基准测试和纯防御方法。, especially work that connects or combines: adversarial attacks on vision-language models; adversarial attack targeting visual inputs of VLMs; semantic visual perturbation for misleading multimodal models; human-interpretable semantic manipulation of images for adversarial attacks; fine-grained visual manipulation attacks on VLMs; Find adversarial attacks that manipulate visual scenes in a semantically meaningful way to mislead vision language models.; Explore robustness evaluation methods for multimodal models against human interpretable visual perturbations.; Search for attacks on VLMs that alter objects, attributes, or relationships to cause incorrect captions or visual reasoning errors..",
+      "matched_requirement_id": "req-composite-vlm-adv-eval",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

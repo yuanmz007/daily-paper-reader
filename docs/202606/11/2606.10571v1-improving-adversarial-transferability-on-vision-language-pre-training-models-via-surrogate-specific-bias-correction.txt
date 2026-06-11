@@ -1,0 +1,1957 @@
+Title: Improving Adversarial Transferability on Vision-Language Pre-training Models via Surrogate-Specific Bias Correction
+
+URL Source: https://arxiv.org/pdf/2606.10571v1
+
+Published Time: Wed, 10 Jun 2026 00:45:13 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# Improving Adversarial Transferability on Vision-Language Pre-training Models via Surrogate-Specific Bias Correction 
+
+Lijia Yu, Jiuxin Cao, Yuchen Qiang, Changhao Chen, Yifei Huang, and Bo Liu 
+
+Abstract —Adversarial examples reveal vulnerabilities in Vision-Language Pre-training (VLP) models and provide insights for improving robustness. A key property of adversarial ex-amples is cross-model transferability, which enables transfer-based black-box attacks. However, existing transfer-based attacks often rely heavily on the surrogate model, causing cross-model performance drops. One key reason is that adversarial opti-mization may follow surrogate model responses more than input semantics, making the update direction effective on the surrogate but less transferable to unseen targets. We call this dependency surrogate-specific bias. Motivated by this observation, DeBias-Attack improves cross-model transferability by correcting this bias in adversarial optimization directions. It maintains two per-turbation branches. The main branch optimizes a perturbation on the original image and obtains the main adversarial gradient used to disrupt image-text alignment. The reference branch optimizes a perturbation on a weak-semantic image constructed from the dataset mean image by adding small Gaussian noise that is resampled at each iteration. Because this weak-semantic image contains little clear visual content, its optimization reflects surrogate responses more than image semantics, and its reference adversarial gradient estimates surrogate-specific bias. DeBias-Attack removes the aligned projection of the main gradient on the reference gradient before updating the adversarial image. It then performs context-aware text substitution using the updated ad-versarial image, yielding adversarial image-text pairs that trans-fer better across models. DeBias-Attack is the first transfer-based VLP attack that corrects surrogate-specific bias through gradient correction. Experiments show strong performance across VLP models, downstream tasks, and both open-source and closed-source multimodal large language models. 
+
+Index Terms —Adversarial transferability, VLP models, black-box attack, transfer-based attack. 
+
+I. I NTRODUCTION 
+
+# VIsion-Language Pre-training (VLP) models learn joint vi-sual and textual representations from large-scale image-text pairs [1]. They support image-text retrieval, image cap-tioning, and visual grounding, and now form a common backbone for multimodal systems [2], [3]. However, wider deployment has also exposed security risks [4]–[9]. Among these risks, adversarial attacks on VLP models have drawn increasing attention, as maliciously crafted multimodal inputs 
+
+Lijia Yu, Yuchen Qiang, Changhao Chen, and Yifei Huang are with the School of Cyber Science and Engineering, Southeast University, China (e-mail: lj yu@seu.edu.cn; yc.qiang@seu.edu.cn; chen changhao@seu.edu.cn; huang yifei@seu.edu.cn). Jiuxin Cao is with the School of Cyber Science and Engineering, Southeast University, China, and also with Purple Mountain Laboratories, Nanjing, China (e-mail: jx.cao@seu.edu.cn). Bo Liu is with the School of Computer Science and Engineering, Southeast University, China, and also with Purple Mountain Laboratories, Nanjing, China (e-mail: bliu@seu.edu.cn). ALBEF TCL CLIP ViT CLIP CNN           
+
+> 0
+> 25
+> 50
+> 75
+> 100
+> Norm. ASR (%)  source
+> (a) Text retrieval attack
+> ALBEF TCL CLIP ViT CLIP CNN
+> source
+> (b) Image retrieval attack
+> CLIP ViT vs. ALBEF CLIP ViT vs. TCL CLIP ViT vs. CLIP CNN
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Input grad.
+> cosine (×10 −3 )
+> (c) Surrogate vs. target input gradient cosine
+> Original image Gaussian noise Dataset mean image
+
+Fig. 1. Observation with different CLIP ViT optimization inputs: original image, Gaussian noise, and dataset mean image. (a)–(b) show normalized ASR for text retrieval and image retrieval attacks. (c) shows input gradient cosine between the CLIP ViT surrogate and each target model. 
+
+can degrade predictions and undermine the reliability of down-stream systems [10], [11]. Among different attack settings, the black-box setting is especially important in practice, since attackers usually have no access to the internal architecture, parameters, or gradients of the target model [12]–[14]. Transfer-based attacks address this setting by crafting adversarial examples on a surrogate model and applying them to unseen targets without victim interaction. This attack paradigm has been studied in unimodal and multimodal domains [15], [16]. For VLP models, the strict surrogate-only setting is harder. Since the attacker receives no target feedback, attack success depends entirely on how well surrogate-crafted examples transfer. However, improving adversarial transferability in this set-ting remains a fundamental challenge. Studies on deep models link transferability to the gradient directions used during adversarial optimization [17], [18]. From a first-order view, a surrogate-crafted perturbation transfers when its attack di-rection also increases the target-model loss, which depends on surrogate-target gradient alignment. If an update direction contains strong surrogate-specific components, it can attack the surrogate while becoming unstable on heterogeneous targets. In transfer-based VLP attacks, this risk is amplified because perturbations are optimized on the surrogate to disrupt image-text alignment, where coupled visual-textual representations can make the update direction follow surrogate-model re-
+
+0000–0000/00$00.00 © 2021 IEEE                   
+
+> arXiv:2606.10571v1 [cs.CV] 9 Jun 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2surrogate -specific
+> region
+> (a) Standar dgradient update
+> optimization trajectory
+> surrogate -specific region
+> more transferable region
+> (b) Debiased gradient updat e
+> 𝛻 !
+> (H)
+> 𝛿 !
+> (G)
+> 𝛿 !
+> (H)
+> more
+> transferable
+> region
+> 𝛿 !
+> (I)
+> optimization trajectory
+> surrogate -specific region
+> more transferable region
+> 𝛿 !
+> (E)𝛿 !
+> (F)
+> 𝛻 !
+> (E)+𝑑 corr
+> (E)𝛻 !
+> (F)+𝑑 corr
+> (F)
+> 𝛻 !
+> (G)+𝑑 corr
+> (G)
+> 𝛿 !
+> (G)
+> 𝛿 !
+> (H)
+> 𝛻 !
+> (H)+𝑑 corr
+> (H)
+> more
+> transferable
+> region
+> surrogate -specific
+> region
+> 𝛻 !
+> (E)𝛻 !
+> (F)
+> 𝛻 !
+> (G)𝛿 !
+> (I)
+> 𝛿 !
+> (E)𝛿 !
+> (F)
+
+Fig. 2. Conceptual comparison of gradient-update trajectories. (a) The standard gradient update used in previous methods directly follows the surrogate gradient and may drift toward surrogate-specific regions. (b) Our debiased gradient update suppresses bias-aligned components and steers the trajectory toward a more transferable region. 
+
+sponses. We study whether such surrogate-specific bias limits VLP transferability. To examine this dependency, we compare perturbations optimized with three visual inputs: the original image, Gaus-sian noise sampled at each iteration, and the dataset mean image. All three settings use the same surrogate misalignment objective, which maximizes the loss that decreases image-text similarity, and differ only in the visual input. The original image follows the standard attack process, where the pertur-bation depends on both input semantics and surrogate-model responses. The Gaussian noise is resampled at every iteration to remove meaningful visual semantics and disrupt fixed input structures. The dataset mean image preserves coarse dataset statistics while suppressing instance-level semantics. For the weak-semantic settings, the perturbation is generated on the weak input, but its transfer effect is evaluated after adding the resulting perturbation back to the clean image. These comparisons isolate how much adversarial optimiza-tion depends on surrogate-model tendencies. Figure 1(a)–(b) normalizes ASR by the CLIP ViT source result to compare relative transfer. Blue, orange, and green denote perturbations optimized from the original image, Gaussian noise, and the dataset mean image. All three inputs produce effective attacks on the CLIP ViT surrogate, reaching 100% normalized ASR. After transfer, however, their behavior differs across targets. Perturbations optimized from weak-semantic inputs, including Gaussian noise and the dataset mean image, show larger drops on heterogeneous targets such as ALBEF and TCL, especially in text retrieval, while their transfer to the related CLIP CNN target remains stronger. This pattern suggests that adversarial optimization depends not only on the input itself; weak-semantic inputs can still produce effective surrogate attacks, but their transfer behavior is shaped by surrogate-model characteristics and target-model similarity. We further measure gradient alignment to examine this transfer pattern. The cosine alignment between normalized surrogate and target input gradients reflects whether their local adversarial update directions are consistent. As shown in Figure 1(c), perturba-tions optimized from the original image have higher alignment with heterogeneous targets such as ALBEF and TCL than those optimized from Gaussian noise or the dataset mean image. For the related CLIP CNN target, the alignment of weak-semantic inputs becomes higher than on heterogeneous targets, which is consistent with their stronger transfer to CLIP CNN 
+
+in Figure 1(a)–(b). These results suggest that adversarial update directions contain surrogate-specific bias across all optimization inputs. The gradient evidence further indicates that weak-semantic inputs carry stronger bias than the clean-image input: their update directions are less tied to transferable input semantics and more tied to surrogate-family behavior. We refer to this model-dependent component as surrogate-specific bias. Based on this observation and the established connection be-tween transferability and source-target gradient alignment [9], [14], [17], [18], we propose DeBias-Attack, a transfer-based adversarial framework that reduces surrogate-specific bias dur-ing perturbation optimization. Figure 2 compares the standard gradient update with our debiased update. Standard transfer-based attacks update perturbations by following surrogate-model gradients at each iteration. Although these directions increase the surrogate attack objective, some components may encode surrogate-specific behavior and transfer poorly to heterogeneous targets. As a result, an adversarial example can remain effective on the surrogate while losing strength after transfer. Figure 2(b) illustrates our debiased gradient update. DeBias-Attack reduces surrogate-specific bias through bias-guided gradient correction. This update steers the perturbation trajectory away from surrogate-specific regions and toward directions with better cross-model transferability. Specifically, DeBias-Attack maintains two image perturba-tion branches before the correction step. The main branch op-timizes a perturbation on the original image to disrupt image-text alignment in the projected semantic subspace. To estimate surrogate-specific bias, the reference branch optimizes another perturbation on a weak-semantic image constructed from the dataset mean image by adding small Gaussian noise that JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3
+
+is resampled at each iteration. The weak-semantic image preserves coarse dataset-level visual statistics but weakens clear instance-level visual semantics and fixed input structures. As a result, its optimization relies more on surrogate-model responses than on input semantics, so the resulting reference adversarial perturbation can be used to estimate surrogate-specific bias. At each correction step, DeBias-Attack applies the main and reference perturbations to the original image and feeds the perturbed images into the surrogate model. The main perturbation produces the main adversarial gradi-ent, while the reference perturbation produces a reference adversarial gradient reflecting surrogate-specific bias. DeBias-Attack reduces the positively aligned projection of the main gradient onto the reference gradient and uses the corrected direction to update the debiased adversarial image. Since this correction is performed throughout the iterative optimization, the whole perturbation trajectory is progressively debiased. For the textual modality, DeBias-Attack performs context-aware token substitution after each image update. Candidate tokens are evaluated with the updated debiased adversarial image in the same projected semantic subspace, allowing the textual perturbation to follow the current image-side correction and further decrease image-text similarity. Through alternating image-text optimization, DeBias-Attack suppresses surrogate-specific bias and strengthens cross-modal semantic misalign-ment across models. Experiments on multiple VLP models, downstream tasks, and multimodal large language models (MLLMs) validate the effectiveness of DeBias-Attack. Under black-box transfer settings, DeBias-Attack achieves competitive attack perfor-mance across different transfer scenarios, especially under heterogeneous transfer. These results show that bias-guided gradient correction improves the cross-model transferability of generated adversarial image-text pairs. In summary, our work makes the following key contribu-tions:  
+
+> •
+
+We show that adversarial update directions may depend on the surrogate model rather than only on the input semantics, which limits cross-model transferability across heterogeneous models. We refer to this dependency as surrogate-specific bias.  
+
+> •
+
+We propose DeBias-Attack, which uses weak-semantic images to produce a reference adversarial gradient that reflects surrogate-specific bias, applies bias-guided gradi-ent correction to reduce the influence of surrogate-specific bias during perturbation optimization, and refines textual perturbations with the updated debiased adversarial im-age.  
+
+> •
+
+Experiments show that DeBias-Attack achieves strong black-box transfer performance across VLP models, downstream tasks, and MLLMs, including open-source and closed-source systems. The remainder of this paper is organized as follows. Sec-tion II reviews related work. Section III defines the threat model. Section IV presents DeBias-Attack. Section V reports the experimental setup and results. Section VI concludes the paper. II. R ELATED WORK 
+
+A. VLP Models 
+
+VLP models learn joint image-text representations from large-scale paired data [2], [7], [19], [20]. Existing architec-tures encode and fuse modalities in different ways. Fusion-based models process multimodal inputs with shared trans-formers [21], [22], dual-stream models use separate encoders with cross-modal interaction [1], [8], [22], [23], and dual-encoder models such as CLIP align separate image and text encodings in a shared space [3], [19]. This architectural diver-sity improves multimodal modeling but complicates transfer-based attacks, because perturbations optimized for one align-ment mechanism may not generalize to heterogeneous targets. The gap among VLP architectures is a major obstacle for transferable attacks when the surrogate and target use different cross-modal alignment patterns. Fusion-heavy models and contrastive dual-encoder models may respond to adversarial perturbations through different unimodal encoders, interaction modules, and embedding spaces. A perturbation that exploits one surrogate architecture can remain effective on related models but lose strength when transferred to another model family. This motivates studying transfer degradation through surrogate-specific optimization bias. 
+
+B. Downstream Tasks of VLP Models 
+
+VLP models are adapted to image-text retrieval, visual grounding, image captioning, and reasoning tasks. Retrieval evaluates cross-modal alignment by matching images and texts [1]; grounding tests fine-grained region-text localiza-tion [24]–[26]; captioning measures visual understanding and language generation [27], [28]; and reasoning tasks assess higher-level multimodal inference [29]. Since these tasks often reuse VLP backbones, transferable adversarial perturbations may affect multiple downstream systems. We also evaluate cross-task transfer from retrieval to localization and generation tasks built on related multimodal representations. Among these tasks, retrieval is a common testbed for multimodal alignment because both image-to-text and text-to-image retrieval directly depend on the learned shared representation. Visual grounding and captioning provide complementary evidence: the former requires region-level correspondence between language and visual content, while the latter tests whether corrupted visual-textual alignment also affects generation. Evaluating these tasks together gives a more complete view of the practical risk posed by transferable VLP attacks. 
+
+C. Adversarial Transferability 
+
+Adversarial transferability allows perturbations to remain effective beyond the setting in which they are generated [9], [30]. For VLP models, two forms are especially relevant: cross-task transfer, where attacks generated for one task af-fect other tasks [31]–[33], and cross-model transfer, where attacks crafted on a surrogate model remain effective on unseen target models [34], [35]. Cross-model transfer can occur between related architectures or across heterogeneous models. Heterogeneous transfer is harder and more practical, JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4Vision Encoder    
+
+> SVD
+> Semantic
+> Projection
+> Matrix 𝐏
+> Semantic
+> Projection
+> Matrix 𝐏
+> Image Dataset
+
+Semantic Projection Matrix Construction  
+
+> Original
+> Text
+> Adversarial
+> Text
+> ⊕
+> ⊕
+> Image Flow
+> Text Flow
+> Token Scoring
+> Backpropagation
+> 𝒙
+> 𝜹 𝒓
+> (𝒕 )
+> 𝜹 𝒎
+> (𝒕 )
+
++ 
+
+> 𝒙 𝐰𝐬
+> (𝒕 )
+
++ 
+
+> 𝜹 𝑰
+> (𝒕 )
+> 𝒙
+
++
+
+> Main
+> Perturbation
+> Branch
+> Reference
+> Perturbation
+> Branch
+> Debiased
+> Perturbation
+> Update
+
+Weak Semantic Input Construction   
+
+> Mean + Noise
+> 𝒙 𝐰𝐬
+> (𝒕 )
+> Text Encoder
+> Token
+> Replace
+> Select
+> Position
+> Image Dataset Weak Semantic
+> Image
+
+Image -Side Optimization 
+
+Text -Side Optimization  
+
+> Once Iterative
+
+Objectives     
+
+> 𝑑 corr
+> (A)=𝛻 L
+> (A)−𝛽 𝑐 (A)𝛻 M
+> (A)
+> Bias -Guided
+> Gradient
+> Correction
+> 𝓛 𝒎
+> (𝒕 )
+> Main Perturbation Loss
+> 𝓛 𝒓
+> (𝒕 )
+> Reference Perturbation Loss
+> 𝓛 𝐝𝐞𝐜
+> (𝒕 )
+> Decoupling Loss
+> 𝓛 𝑰
+> (𝒕 )
+> Debiased Attack Loss
+> 𝑺 𝒄
+> 𝒕
+> Token Candidate Score
+> Gradient Correction
+> Flow
+> 𝛻 M
+> (A)
+> 𝛻 L
+> (A)
+> 𝑑 corr
+> (A)
+
+Fig. 3. Overview of DeBias-Attack. The image-side optimization maintains main and reference perturbation branches, applies bias-guided gradient correction, and updates the debiased adversarial image. The text-side optimization selects token replacements according to the token candidate score to produce adversarial image-text pairs. 
+
+because the attacker often does not know whether the victim model uses fusion, cross-attention, or contrastive alignment. Although robust training and defense methods have been ex-plored, transferable multimodal attacks remain difficult to pre-vent [36]. Cross-task transfer means one adversarial example can affect several downstream behaviors, while cross-model transfer enables black-box attacks without direct victim access. In VLP systems, these properties are connected because many downstream tasks inherit the same multimodal representations. Our work focuses on cross-model and cross-task transfer, with emphasis on heterogeneous model transfer. Recent VLP attacks improve transferability through joint multimodal perturbation, set-level guidance, stronger opti-mization, semantic-aligned evolution, or global-local transfor-mations [5], [10], [33], [37]–[39]. These methods strengthen the attack objective or input transformation strategy. Our work instead studies transfer degradation caused by surrogate-specific bias and uses reference adversarial gradients from weak-semantic images to suppress this bias during perturba-tion optimization, which is useful for heterogeneous transfer. III. T HREAT MODEL 
+
+A. Attacker’s goals. 
+
+Adversarial objectives are commonly divided into targeted and untargeted settings. Targeted attacks force a specified output, whereas untargeted attacks degrade model performance without specifying the incorrect prediction. We focus on the untargeted setting and measure effectiveness by attack success rate and drops in task metrics. 
+
+B. Attacker’s constraints. 
+
+We adopt a strict black-box, transfer-based setting. The attacker has benign image-text pairs and may use surrogate models for optimization, but has no access to the target model’s architecture, parameters, gradients, outputs, or labels. Unlike query-based attacks, our setting allows no target in-teraction during generation or evaluation. Visual perturbations are bounded by a standard ℓp constraint to preserve imper-ceptibility, and textual perturbations are limited to one token substitution. The resulting adversarial image-text pairs are transferred to unseen targets, so all reported results reflect surrogate-only transferability. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 5
+
+IV. T HE PROPOSED METHOD 
+
+We first introduce the notation and problem setup, then de-scribe adversarial image optimization and adversarial text opti-mization. DeBias-Attack maintains a main perturbation branch and a reference perturbation branch on a weak-semantic image, applies bias-guided gradient correction throughout the debi-ased perturbation update, and optimizes the adversarial text with the updated debiased adversarial image. The supplemen-tary material gives the theoretical analysis. DeBias-Attack reduces surrogate dependency through bias-guided gradient correction guided by weak-semantic images. Figure 3 shows the framework. Visual and textual repre-sentations are evaluated in a projected semantic subspace, where cosine similarity measures image-text alignment. On the image side, the main branch optimizes a perturbation on the original image with the main perturbation loss. The reference branch optimizes a perturbation on a randomized weak-semantic image with the reference perturbation loss and the decoupling loss. Both perturbations are added to the original image to compute the main and reference adversarial gradients for bias-guided correction. The debiased perturbation update combines the corrected direction with the debiased attack loss to generate the debiased adversarial image. On the text side, token substitutions are refined with the updated debiased adversarial image according to the token candidate score, so visual and textual perturbations reduce cross-modal semantic similarity together. 
+
+A. Notation and Problem Setup 
+
+Let xI ∈ [0 , 1] C×H×W denote the input image and xT =(t1, t 2, . . . , t L) ∈ V L denote the input text, where ti ∈ V is the i-th token, V is the vocabulary, and L is the sequence length. The vision encoder fI (·) maps the image to a visual representation zI = fI (xI ), and the text encoder fT (·) maps the text to a textual representation zT = fT (xT ). Given the original image-text pair (xI , xT ) and the surrogate encoders 
+
+(fI , f T ), our goal is to construct an adversarial image ˜xI and an adversarial text ˜xT that disrupt image-text alignment while keeping the image perturbation imperceptible and the textual perturbation fluent and semantically plausible. For the visual modality, the adversarial image is obtained by adding a bounded perturbation δI to the original image: 
+
+˜xI = Π [0 ,1] (xI + δI ) , ∥δI ∥∞ ≤ ε, (1) where Π[0 ,1] (·) clips the adversarial image into the valid pixel range, and the ℓ∞ constraint keeps the image perturbation within the attack budget. In the following image-side optimiza-tion, δI denotes the debiased adversarial perturbation produced by the proposed correction strategy. For the textual modality, the adversarial text is obtained by replacing a small subset of tokens in the original text: 
+
+˜xT = (˜ t1, ˜t2, . . . , ˜tL) ∈ V L, dH (˜ xT , xT ) ≤ εT , (2) where ˜ti denotes the substituted token at position i and 
+
+dH (·, ·) measures the number of replaced token positions. This constraint preserves fluency and semantic plausibility by limiting the total number of token substitutions. 
+
+Algorithm 1 Optimization Procedure of DeBias-Attack  
+
+> 1:
+
+Input: fI , f T , P, (xI , xT ) 
+
+> 2:
+
+Output: ˜xTI , ˜xTT 
+
+> 3:
+
+Initialize δ0
+
+> m
+
+, δ0 
+
+> r
+
+, δ0 
+
+> I
+
+within ε 
+
+> 4:
+
+˜x0 
+
+> I
+
+← Π[0 ,1] (xI + δ0 
+
+> I
+
+), ˜x0 
+
+> T
+
+← xT 
+
+> 5:
+
+Select token position by masking  
+
+> 6:
+
+for each token position i in ˜x0 
+
+> T
+
+do  
+
+> 7:
+
+Construct masked text x\iT 
+
+> 8:
+
+∆i ← l(xI , x\iT ) + l(˜ x0 
+
+> I
+
+, x\iT ) 
+
+> 9:
+
+end for  
+
+> 10:
+
+i⋆ ← arg max i ∆i 
+
+> 11:
+
+for t = 0 to T − 1 do  
+
+> 12:
+
+Main branch  
+
+> 13:
+
+Optimize the main perturbation on the original image  
+
+> 14:
+
+L(t) 
+
+> m
+
+= l(xI + δ(t) 
+
+> m
+
+, ˜x(t) 
+
+> T
+
+) 
+
+> 15:
+
+δ(t+1)  
+
+> m
+
+← Πε
+
+
+
+δ(t) 
+
+> m
+
++ α sign 
+
+
+
+∇δ(t)
+
+> m
+
+L(t)
+
+> m
+
+  
+
+> 16:
+
+Reference branch  
+
+> 17:
+
+Construct a weak-semantic image with resampled Gaussian noise  
+
+> 18:
+
+Sample ξ(t) ∼ N (0 , ρ 2) 
+
+> 19:
+
+x(t)ws ← Π[0 ,1] 
+
+ 1
+
+> N
+
+PNn=1 x(n) + ξ(t)
+
+ 
+
+> 20:
+
+Optimize the reference perturbation and decouple it from the main branch  
+
+> 21:
+
+L(t) 
+
+> r
+
+= l(x(t)ws + δ(t) 
+
+> r
+
+, ˜x(t) 
+
+> T
+
+) 
+
+> 22:
+
+L(t)dec = − cos 
+
+
+
+fI (xI + δ(t) 
+
+> m
+
+)P, f I (xI + δ(t) 
+
+> r
+
+)P
+
+ 
+
+> 23:
+
+δ(t+1)  
+
+> r
+
+← Πε
+
+
+
+δ(t) 
+
+> r
+
++ α sign 
+
+
+
+∇δ(t)
+
+> r
+
+
+
+L(t) 
+
+> r
+
++ L(t)dec 
+
+  
+
+> 24:
+
+Bias-guided correction  
+
+> 25:
+
+Compute main and reference gradients under the original-image context  
+
+> 26:
+
+∇(t) 
+
+> m
+
+= ∇δ(t)
+
+> m
+
+l(xI + δ(t) 
+
+> m
+
+, ˜x(t) 
+
+> T
+
+) 
+
+> 27:
+
+∇(t) 
+
+> r
+
+= ∇δ(t)
+
+> r
+
+l(xI + δ(t) 
+
+> r
+
+, ˜x(t) 
+
+> T
+
+) 
+
+> 28:
+
+Remove the positively aligned reference-gradient component  
+
+> 29:
+
+c(t) ← max( ⟨∇ (t) 
+
+> m
+
+, ∇(t) 
+
+> r
+
+⟩, 0) 
+
+∥∇ (t) 
+
+> r
+
+∥22 + ϵnum  
+
+> 30:
+
+d(t)corr ← ∇ (t) 
+
+> m
+
+− βc (t)∇(t) 
+
+> r
+> 31:
+
+Debiased update  
+
+> 32:
+
+Update the final image perturbation with the corrected direc-tion  
+
+> 33:
+
+L(t) 
+
+> I
+
+= l(xI + δ(t) 
+
+> I
+
+, ˜x(t) 
+
+> T
+
+) 
+
+> 34:
+
+δ(t+1)  
+
+> I
+
+← Πε
+
+
+
+δ(t) 
+
+> I
+
++ α sign 
+
+
+
+∇δ(t)
+
+> I
+
+L(t) 
+
+> I
+
++ d(t)corr 
+
+  
+
+> 35:
+
+˜x(t+1)  
+
+> I
+
+← Π[0 ,1] (xI + δ(t+1)  
+
+> I
+
+) 
+
+> 36:
+
+Text update  
+
+> 37:
+
+Generate candidates at the selected position and score them with the updated image  
+
+> 38:
+
+C(t) 
+
+> i⋆
+
+← MLM(˜ x(t) 
+
+> T
+
+, i ⋆, C ) 
+
+> 39:
+
+for each candidate token c ∈ C (t) 
+
+> i⋆
+
+do  
+
+> 40:
+
+Construct x(c,t ) 
+
+> T
+
+by replacing i⋆ with c 
+
+> 41:
+
+S(t) 
+
+> c
+
+← l(xI , x(c,t ) 
+
+> T
+
+) + l(˜ x(t+1)  
+
+> I
+
+, x(c,t ) 
+
+> T
+
+) 
+
+> 42:
+
+end for  
+
+> 43:
+
+c⋆t ← arg max c∈C (t)
+
+> i⋆
+
+S(t) 
+
+> c
+> 44:
+
+˜x(t+1)  
+
+> T
+
+← x(c⋆t ,t ) 
+
+> T
+> 45:
+
+end for  
+
+> 46:
+
+return ˜xTI , ˜xTT
+
+With the adversarial image and text defined above, image-text alignment is measured by the cosine similarity between visual and textual representations: 
+
+s(xI , xT ) = cos( fI (xI ), f T (xT )) = fI (xI )fT (xT )⊤
+
+∥fI (xI )∥2∥fT (xT )∥2
+
+. (3) JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 6
+
+Under the image and text perturbation constraints in Eq. (1) and Eq. (2), the adversarial objective is to reduce the image-text similarity of the adversarial pair, which is equivalently formulated as maximizing the corresponding misalignment score: min  
+
+> ˜xI,˜xT
+
+s(˜ xI , ˜xT )
+
+⇐⇒ max  
+
+> ˜xI,˜xT
+
+[−s(˜ xI , ˜xT )] . (4) 
+
+B. Adversarial Image Optimization 
+
+DeBias-Attack optimizes the image perturbation in four steps: optimizing the main perturbation branch, optimizing the reference perturbation branch, performing bias-guided gradient correction, and updating the debiased perturbation. The main branch optimizes the adversarial perturbation on the original image and provides a gradient that may con-tain both transferable image-text misalignment directions and surrogate-specific directions. The reference branch learns from randomized weak-semantic images and provides a gradient used to estimate surrogate-specific bias. Bias-guided gradient correction reduces the part of the main gradient that aligns with the reference gradient. The debiased perturbation update applies the corrected direction to δI while preserving attack strength. Following SA-AET [33], we construct a semantic projection matrix P ∈ Rd×d from text embeddings in the Attack Text Corpus. We build this corpus by sampling 40% of the text instances from the dataset, using the same setting as SA-AET. The sampling is independent of the attack objective and does not use adversarial gradients. We apply singular value decomposition to the sampled corpus embeddings to obtain P.The projection compresses unstable dimensions and dimen-sions with limited semantic information, so image and text features are compared in a concentrated semantic subspace. The projection matrix is not adapted to any target model. For an image-text pair (xI , xT ), we define the projected cosine similarity as: 
+
+sP(xI , xT ) = cos( fI (xI )P, f T (xT )P) . (5) The image-side attack decreases this projected similarity. We maximize the misalignment score: 
+
+l(xI , xT ) = −sP(xI , xT ). (6) This objective pushes visual and textual representations apart in the projected semantic subspace. 
+
+Main perturbation branch. Let δm denote the auxiliary main adversarial perturbation. At iteration t, it is optimized on the original image: 
+
+L(t) 
+
+> m
+
+= l
+
+
+
+xI + δ(t) 
+
+> m
+
+, ˜x(t)
+
+> T
+
+
+
+. (7) Maximizing the main perturbation loss L(t) 
+
+> m
+
+decreases the projected cosine similarity between the perturbed image and the current text. The main adversarial perturbation is updated as: 
+
+δ(t+1)  
+
+> m
+
+= Π ε
+
+
+
+δ(t) 
+
+> m
+
++ α sign 
+
+
+
+∇δ(t)
+
+> m
+
+L(t)
+
+> m
+
+ 
+
+, (8) where α is the common step size for image-side perturbation updates. 
+
+Reference perturbation branch. DeBias-Attack constructs a randomized weak-semantic image at each iteration to es-timate surrogate-specific bias. It adds small Gaussian noise to the dataset mean image, preserving coarse dataset-level image statistics while weakening stable visual semantics and fixed image structures. The Gaussian noise is re-sampled at each iteration. Given the dataset X = {x(n)}Nn=1 , the weak-semantic image is defined as: 
+
+x(t)ws = Π [0 ,1] 
+
+1
+
+N
+
+> N
+
+X
+
+> n=1
+
+x(n) + ξ(t)
+
+!
+
+, (9) where ξ(t) is re-sampled from a Gaussian distribution 
+
+N (0 , ρ 2) at each iteration, and ρ controls the standard de-viation of the random perturbation added to the dataset mean image. The reference adversarial perturbation δr is optimized on this weak-semantic image paired with the current adversar-ial text ˜x(t) 
+
+> T
+
+:
+
+L(t) 
+
+> r
+
+= l
+
+
+
+x(t)ws + δ(t) 
+
+> r
+
+, ˜x(t)
+
+> T
+
+
+
+. (10) Because the weak-semantic image comes from the dataset mean plus Gaussian noise, it reduces dependence on clear visual semantics and fixed input structures. The reference perturbation therefore reflects surrogate-specific bias rather than image-specific semantics. The reference perturbation should not copy the main per-turbation trajectory. We apply both perturbations to the same original image and reduce the similarity between their pro-jected visual representations with the decoupling loss: 
+
+L(t)dec = − cos 
+
+
+
+fI (xI + δ(t) 
+
+> m
+
+)P, f I (xI + δ(t) 
+
+> r
+
+)P
+
+
+
+. (11) Maximizing this term reduces the similarity between the projected visual responses induced by the current main and reference perturbations. This moves the reference perturbation away from the original attack direction and makes its gradient more suitable for correction. Combining the reference perturbation loss with the decou-pling loss, the reference adversarial perturbation is updated as: 
+
+δ(t+1)  
+
+> r
+
+= Π ε
+
+
+
+δ(t) 
+
+> r
+
++ α sign 
+
+
+
+∇δ(t)
+
+> r
+
+
+
+L(t) 
+
+> r
+
++ L(t)dec 
+
+ 
+
+. (12) 
+
+Bias-guided gradient correction. At iteration t, DeBias-Attack applies the current main and reference perturbations to the original image and feeds the perturbed images into the surrogate model. The main perturbation produces the gradient used to disrupt image-text alignment. The reference perturbation, learned from weak-semantic images, encodes surrogate-preferred perturbation patterns. For the correction step, we compute two gradients under the same original-image context: 
+
+∇(t) 
+
+> m
+
+= ∇δ(t)
+
+> m
+
+l
+
+
+
+xI + δ(t) 
+
+> m
+
+, ˜x(t)
+
+> T
+
+
+
+,
+
+∇(t) 
+
+> r
+
+= ∇δ(t)
+
+> r
+
+l
+
+
+
+xI + δ(t) 
+
+> r
+
+, ˜x(t)
+
+> T
+
+
+
+,
+
+(13) where ∇(t) 
+
+> m
+
+is the main gradient induced by applying the main perturbation to the original image, while ∇(t) 
+
+> r
+
+is the reference gradient induced by applying the reference perturbation to the JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 7
+
+same image. Computing both gradients under the same visual context makes their projection relationship well defined and lets the reference gradient indicate which part of the main gradient follows surrogate-specific bias. We compute the positive projection coefficient from the main adversarial gradient onto the reference adversarial gra-dient: 
+
+c(t) =max 
+
+D 
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+, 0
+
+
+
+∇(t)
+
+> r
+> 22
+
++ ϵnum 
+
+, (14) where ϵnum is a small numerical constant used to avoid division by zero. All inner products and norms are computed after vectorizing the gradients. The coefficient c(t) measures how much of the main gradient aligns with the reference gradient. The maximum operator applies the correction only when the two gradients are positively aligned. The corrected direction reduces the bias-related part of the main gradient: 
+
+d(t)corr = ∇(t) 
+
+> m
+
+− βc (t)∇(t) 
+
+> r
+
+, (15) where β controls the correction strength. Since c(t) is com-puted from the positive projection coefficient in Eq. (14), the correction removes only the positively aligned component of the main gradient along the reference gradient. 
+
+Debiased perturbation update. The debiased adversarial perturbation δI is optimized on the original image with the debiased attack loss to preserve adversarial effectiveness: 
+
+L(t) 
+
+> I
+
+= l
+
+
+
+xI + δ(t) 
+
+> I
+
+, ˜x(t)
+
+> T
+
+
+
+. (16) During optimization, the debiased adversarial perturbation is updated by combining its own adversarial gradient with the corrected direction: 
+
+δ(t+1)  
+
+> I
+
+= Π ε
+
+
+
+δ(t) 
+
+> I
+
++ α sign 
+
+
+
+∇δ(t)
+
+> I
+
+L(t) 
+
+> I
+
++ d(t)corr 
+
+ 
+
+. (17) The debiased adversarial image is formed as: 
+
+˜x(t+1)  
+
+> I
+
+= Π [0 ,1] 
+
+
+
+xI + δ(t+1) 
+
+> I
+
+
+
+. (18) The main and reference branches provide the gradients used for correction, while the debiased update maintains δI as the final adversarial perturbation. This separated update preserves attack strength while reducing the influence of surrogate-specific bias, improving cross-model transferability. 
+
+C. Adversarial Text Optimization 
+
+To perturb the textual modality while preserving fluency and semantic plausibility, we use a gradient-free substitution strategy. The text update follows each image-side correction step. Candidate substitutions are evaluated with the current debiased adversarial image under the same projected misalign-ment score, keeping the text perturbation synchronized with the image update. Before alternating optimization, we select the token position to attack. For each token position i, we construct a masked text 
+
+x\iT by masking the i-th token. We measure token importance under both the original image and the initial adversarial image: 
+
+i⋆ = arg max  
+
+> i
+
+∆i, ∆i = l(xI , x\iT ) + l(˜ x(0)  
+
+> I
+
+, x\iT ). (19) This score identifies the token whose masking increases projected image-text misalignment most under the original and initial adversarial visual contexts. The position search is performed once to reduce cost, and the selected position i⋆ is kept fixed during subsequent iterations. After fixing the attack position i⋆, we use a pretrained BertForMaskedLM model to generate context-aware candidate substitutions. Let C(t) 
+
+> i⋆
+
+denote the candidate set generated for the current adversarial text ˜x(t) 
+
+> T
+
+.For each candidate token c ∈ C (t) 
+
+> i⋆
+
+, we construct a candidate text x(c,t ) 
+
+> T
+
+by replacing the token at position i⋆ with c. The token candidate score is computed under both the original image and the updated debiased adversarial image: 
+
+S(t) 
+
+> c
+
+= l(xI , x(c,t ) 
+
+> T
+
+) + l(˜ x(t+1)  
+
+> I
+
+, x(c,t ) 
+
+> T
+
+),c⋆t = arg max 
+
+> c∈C (t)
+> i⋆
+
+S(t) 
+
+> c
+
+. (20) The adversarial text is updated as ˜x(t+1)  
+
+> T
+
+= x(c⋆t ,t ) 
+
+> T
+
+. Because the candidate token is evaluated with the updated debiased adversarial image, the textual perturbation follows the current image-side correction result. This alternating image-text up-date decreases projected image-text similarity and produces adversarial image-text pairs with stronger cross-model trans-ferability. Algorithm 1 summarizes the full procedure. V. E XPERIMENTS 
+
+We evaluate DeBias-Attack across cross-model transfer, cross-task transfer, perturbation ablations, and transfer to mul-timodal large language models (MLLMs). These experiments test attack effectiveness from complementary perspectives: transfer across architectures, transfer across downstream ob-jectives, sensitivity to the debiasing design, and transfer to open-ended multimodal generation. The supplementary mate-rial includes additional MLLM qualitative examples, attention maps, modality ablations, and defense evaluation. 
+
+A. Experiment Setup 1) Datasets: We use Flickr30K [40] and MSCOCO [41] for image-text retrieval, RefCOCO+ [42] for visual grounding, and MSCOCO for image captioning. These datasets cover retrieval, localization, and generation scenarios, enabling eval-uation of transferable multimodal adversarial examples across different downstream tasks. 
+
+2) Surrogate and Target Models: We use ALBEF [1], TCL [8], CLIP CNN [19], and CLIP ViT [19] as surrogate and target models. ALBEF and TCL involve tighter multimodal interaction, while CLIP CNN and CLIP ViT follow contrastive image-text alignment with different visual backbones. This model set covers both related and heterogeneous transfer settings and tests whether an attack remains effective when the target alignment mechanism differs from the surrogate. 
+
+3) Downstream Tasks: We evaluate Image-Text Retrieval (ITR), Visual Grounding (VG), and Image Captioning (IC). ITR is the attack generation task, while VG and IC test transfer to localization and generation without additional optimization. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 8a surfer balancing in the middle of a wave     
+
+> a room filled desks and computers a man and woman sitting listening and anther man with a camera
+> two buses are traveling down a city street
+> three elephants standing in the grass near water
+> a surfer
+> girl in the middle of a wave
+> a room bed
+> desks and computers a man and woman sitting listening and anther man with a camera
+> two two are traveling down a city street
+> three
+> four
+> standing in the grass near water
+> Adversarial Adversarial  Original  Original
+> Fig. 4. Representative adversarial examples. Each case compares the original and adversarial behavior; incorrect or mismatched retrieval results indicate successful attacks.
+
+4) Evaluation Metrics: Following prior work, we use At-tack Success Rate (ASR) as the primary metric and compute it on original success, so the evaluation focuses on samples that the clean model handles correctly. For retrieval, we report R@1 ASR for text retrieval (TR, image-to-text re-trieval) and image retrieval (IR, text-to-image retrieval), where rank original = 1 and rank adv > 1 indicates success. For cap-tioning, we report BLEU [43], METEOR [44], ROUGE [45], CIDEr [46], and SPICE [47]; for grounding, we report local-ization accuracy under IoU ≥ 0.5. 
+
+5) Baseline Methods: We compare with PGD [4], BERT-Attack [7], Co-Attack [10], SGA [5], DRA [37], SA-AET [33], GLEAM [39], and TMM [38]. Together, these methods cover attacks on images, text, embeddings, multimodal perturbations, trajectory optimization, semantic evolution, and input transfor-mations. 
+
+6) Implementation Details: All experiments are imple-mented in PyTorch on an NVIDIA RTX 3090 GPU. Unless otherwise specified, image-side optimization uses 8 iterations, perturbation budget ε = 8 /255 , and step size α = 2 /255 for the main, reference, and debiased adversarial perturbations. We set the Gaussian noise standard deviation to ρ = 2 /255 
+
+and set the correction strength to β = 0 .9.
+
+B. Qualitative Attack Examples 
+
+Figure 4 shows representative adversarial examples gen-erated by DeBias-Attack. Although the visual perturbations remain subtle, the adversarial image-text pairs lead to clear retrieval failures across heterogeneous target models. The generated perturbations cause cross-modal semantic misalign-ment beyond the surrogate model. This qualitative experiment provides a direct view of the attack effect. 
+
+C. Cross-Model Attack Performance Evaluation 
+
+Table I reports R@1 ASR on Flickr30K. DeBias-Attack remains competitive on identical and closely related surrogate-target pairs, where ASR can already be saturated, and shows clearer advantages when the surrogate and target come from different model families. This trend appears in both transfer directions: from fusion-based VLP models to CLIP targets and from CLIP models back to fusion-based targets. The improvement is balanced across TR and IR, suggesting that the corrected perturbation does not overfit a single retrieval direction. Since text retrieval and image retrieval query differ-ent sides of the aligned representation space, consistent gains in both directions indicate better transferability of cross-modal misalignment. This behavior is consistent with the motivation of DeBias-Attack, where reducing the component aligned with a weak-semantic reference gradient preserves attack strength on the surrogate while making the update less dependent on architecture-specific responses. Table II further reports MSCOCO results. The same pattern appears on this dataset, where DeBias-Attack remains stable in saturated related-model settings and shows clearer advantages under heterogeneous transfer, especially between fusion-based VLP models and CLIP-style models. Since Flickr30K and MSCOCO differ in image diversity and caption distribution, this consistency indicates that the debiased update is not tied to a particular retrieval benchmark. 
+
+D. Cross-Task Attack Performance Evaluation 
+
+We next test whether adversarial examples generated for ITR transfer to VG and IC without additional optimization. For this cross-task evaluation, we reproduce and compare the strongest baselines from Table I, including SGA, DRA, SA-AET, and GLEAM. Table III shows that DeBias-Attack reduces validation accuracy from 58.46 to 44.31 and TestA accuracy from 65.89 to 50.52, outperforming GLEAM by 1.91 points on average. Table IV shows drops across captioning metrics, reducing CIDEr from 133.3 to 56.3 and SPICE from 23.8 to 11.9, while improving over GLEAM on B@4, METEOR, CIDEr, and SPICE. Retrieval-oriented adversarial examples transfer to localization and generation, not only to another ranking metric. VG requires fine-grained region-text correspondence, whereas IC requires generating fluent descriptions from visual content. Degradation on both tasks suggests that the adversarial image-text pair disrupts semantic alignment at a level that remains relevant after the downstream objective changes. This is a stronger transfer test than cross-model retrieval alone because the victim output space and evaluation metrics are no longer the same as the attack-generation objective. 
+
+E. Ablation Study 
+
+We ablate the input used to optimize the reference perturba-tion branch with ALBEF on Flickr30K. Table V compares the JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 9
+
+TABLE I R@1 ATTACK SUCCESS RATES (%) ON FLICKR 30K FOR IMAGE AND TEXT RETRIEVAL . “S URROGATE ” DENOTES THE VLP MODEL USED TO GENERATE ADVERSARIAL EXAMPLES ; HIGHER VALUES INDICATE STRONGER ATTACKS , AND BOLD VALUES MARK THE BEST RESULT FOR EACH SURROGATE -TARGET RETRIEVAL SETTING (TIES INCLUDED ). 
+
+Target ALBEF TCL CLIP ViT CLIP CNN 
+
+Surrogate Attack TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 
+
+ALBEF 
+
+PGD [4] 92.21 93.88 24.47 28.36 10.95 16.01 14.32 19.42 BERT-Attack [7] 11.89 27.11 12.21 27.65 29.61 43.45 32.37 45.79 Co-Attack [10] 96.72 98.12 39.88 50.63 30.03 39.42 31.70 42.31 SGA [5] 99.86 99.95 87.42 88.56 37.05 47.01 39.91 49.53 DRA [37] 99.83 99.92 91.88 90.96 46.73 56.25 49.92 59.24 TMM [38] 97.53 97.51 64.97 69.60 52.90 60.90 56.61 62.97 SA-AET [33] 99.91 99.97 96.20 95.79 55.84 63.55 57.63 65.28 GLEAM [39] 100.0 99.97 96.27 95.91 66.92 66.19 67.09 66.26 
+
+DeBias-Attack 100.0 100.0 97.68 97.33 70.06 73.26 70.88 74.96 TCL 
+
+PGD [4] 35.10 41.28 89.08 89.45 10.33 16.58 14.57 20.96 BERT-Attack [7] 12.04 27.02 14.90 29.36 29.41 43.88 33.61 45.71 Co-Attack [10] 50.20 59.74 91.29 95.10 33.10 42.51 32.38 47.56 SGA [5] 92.71 93.02 100.0 99.96 37.01 46.62 41.43 51.72 DRA [37] 95.45 95.36 99.91 99.98 47.69 57.06 52.46 62.51 TMM [38] 68.10 72.30 97.87 97.60 54.63 63.52 58.87 65.71 SA-AET [33] 98.73 98.41 100.0 100.0 56.03 63.61 59.55 67.13 GLEAM [39] 98.17 98.46 100.0 99.90 66.11 66.90 66.97 67.71 
+
+DeBias-Attack 93.43 94.60 100.0 100.0 68.10 72.65 69.35 76.47 CLIP ViT 
+
+PGD [4] 3.32 6.19 4.80 8.55 69.64 84.32 13.45 17.22 BERT-Attack [7] 9.83 23.10 11.59 24.70 28.77 38.79 30.63 37.20 Co-Attack [10] 8.92 19.86 10.30 21.00 78.21 87.93 29.67 38.70 SGA [5] 22.84 34.01 25.34 36.18 100.0 100.0 53.70 61.45 DRA [37] 28.12 43.27 28.16 44.35 100.0 100.0 65.09 69.71 TMM [38] 25.87 39.27 28.03 38.14 100.0 100.0 56.21 65.21 SA-AET [33] 36.40 50.63 39.05 51.36 100.0 100.0 71.33 74.24 GLEAM [39] 51.83 62.23 50.32 60.95 99.88 99.94 79.25 80.43 
+
+DeBias-Attack 61.52 67.21 65.02 69.98 100.0 100.0 83.01 84.12 CLIP CNN 
+
+PGD [4] 2.10 6.39 4.72 8.59 5.73 12.42 89.54 92.87 BERT-Attack [7] 8.65 22.89 12.14 25.76 26.83 37.20 30.62 39.92 Co-Attack [10] 10.24 23.85 12.79 26.27 27.53 40.92 95.66 96.21 SGA [5] 15.43 28.22 18.44 33.32 38.84 51.13 99.86 99.88 DRA [37] 19.31 34.84 21.35 37.51 48.82 58.84 99.84 99.89 TMM [38] 17.43 30.14 19.46 35.24 42.12 52.37 97.74 97.34 SA-AET [33] 24.10 38.01 27.10 42.04 54.32 64.00 100.0 99.95 GLEAM [39] 36.93 48.41 36.12 52.06 62.89 69.03 100.0 99.81 
+
+DeBias-Attack 50.16 59.35 59.11 64.62 70.92 75.52 100.0 100.0 
+
+dataset mean image, a uniform 0.5 image with Gaussian noise, and the dataset mean image with Gaussian noise. The 0.5-prior input removes image-specific semantics while keeping the reference input within the normalized pixel range, whereas the dataset mean preserves coarse dataset-level statistics. Low-variance noise improves heterogeneous transfer, while high variance gives limited gains, suggesting that excessive ran-domness weakens the reference signal. The dataset mean with low-variance noise performs best on every non-source target and retrieval direction. The reference input should be weak-semantic. An artificial prior can reduce image semantics, but it may produce gradients detached from natural-image statistics. Mild noise around the dataset mean keeps the reference branch close to the data distribution while suppressing instance-level semantics, which makes the reference gradient better suited for estimating surrogate-specific bias. The ablation therefore supports both parts of the reference-branch design, showing that weak semantics are needed to expose surrogate-preferred update directions and that dataset-level statistics help keep this estimate relevant to natural images. We also ablate the correction strength β. Table VI shows that β = 0 weakens transfer on CLIP-based targets, while increasing β improves heterogeneous transfer by suppressing the aligned reference-gradient component. The best perfor-mance is obtained at β = 0 .9, which achieves the highest ASR on both CLIP ViT and CLIP CNN while preserving white-box attack performance on ALBEF. Larger values reduce ASR, suggesting that strong correction can also suppress useful adversarial components. β controls a trade-off between debiasing and attack strength. Moderate correction removes the component most likely to be surrogate-specific, but ex-cessive correction can distort the main adversarial direction and remove useful perturbation components. The empirical optimum at β = 0 .9 matches this trade-off. 
+
+F. Transfer to Multimodal Large Language Models 
+
+We evaluate black-box captioning attacks on BLIP-2, Qwen2-VL, Claude-3.5, GPT-4o, and GPT-4o-mini. Adver-sarial examples are generated on ALBEF, and each model is JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 
+
+TABLE II R@1 ATTACK SUCCESS RATES (%) ON MSCOCO FOR IMAGE AND TEXT RETRIEVAL . “S URROGATE ” DENOTES THE VLP MODEL USED TO GENERATE ADVERSARIAL EXAMPLES ; HIGHER VALUES INDICATE STRONGER ATTACKS , AND BOLD VALUES MARK THE BEST RESULT FOR EACH SURROGATE -TARGET RETRIEVAL SETTING (TIES INCLUDED ). 
+
+ALBEF TCL CLIP ViT CLIP CNN 
+
+Surrogate Attack TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 
+
+ALBEF 
+
+PGD [4] 94.78 92.81 33.82 36.41 21.88 27.33 24.01 30.64 BERT-Attack [7] 24.61 35.72 24.11 33.90 45.18 52.01 47.56 54.32 Co-Attack [10] 95.30 97.42 64.89 73.04 55.62 62.01 56.41 66.12 SGA [5] 99.92 99.97 87.09 88.53 63.41 69.88 63.77 70.49 DRA [37] 99.86 99.91 88.53 89.82 69.02 75.59 68.31 75.36 TMM [38] 96.79 97.73 70.19 74.02 68.37 75.34 70.97 76.88 SA-AET [33] 100.0 99.96 96.15 95.67 76.81 80.02 76.44 80.31 GLEAM [39] 100.0 100.0 100.0 99.67 81.31 78.53 77.59 76.78 DeBias-Attack 100.0 100.0 95.21 94.90 83.90 86.33 82.35 86.12 TCL 
+
+PGD [4] 40.42 44.57 98.21 98.67 21.66 26.75 24.14 32.01 BERT-Attack [7] 35.08 45.21 38.31 48.76 51.37 58.49 52.40 61.11 Co-Attack [10] 50.09 60.01 91.92 95.22 32.91 42.43 32.18 47.63 SGA [5] 92.46 93.18 100.0 100.0 59.46 65.08 60.39 67.56 DRA [37] 94.98 95.71 100.0 100.0 70.32 74.68 70.11 76.82 TMM [38] 73.62 78.38 97.00 97.92 70.60 78.98 73.27 80.21 SA-AET [33] 97.62 98.23 100.0 99.99 76.35 79.53 75.71 80.92 GLEAM [39] 100.0 100.0 100.0 100.0 80.24 78.80 80.35 76.11 DeBias-Attack 95.49 96.09 100.0 100.0 82.91 85.54 83.86 86.50 CLIP ViT 
+
+PGD [4] 10.03 14.12 12.45 15.52 82.58 90.24 21.89 29.78 BERT-Attack [7] 20.61 29.23 21.27 29.33 45.28 51.41 44.72 53.40 Co-Attack [10] 26.01 36.95 28.52 38.09 88.52 96.39 47.22 58.12 SGA [5] 43.48 51.77 44.29 50.86 100.0 100.0 70.33 75.24 DRA [37] 52.93 61.12 51.66 61.78 100.0 100.0 80.71 83.98 TMM [38] 45.58 56.83 46.51 53.67 97.10 98.21 70.27 75.12 SA-AET [33] 57.42 67.11 57.30 65.42 100.0 100.0 84.12 86.97 GLEAM [39] 63.87 71.15 59.30 67.75 100.0 100.0 86.32 88.92 DeBias-Attack 75.77 77.28 76.35 77.03 100.0 100.0 89.82 91.68 CLIP CNN 
+
+PGD [4] 8.04 12.48 11.63 15.41 13.48 20.44 92.49 94.59 BERT-Attack [7] 23.12 34.41 24.32 29.27 51.05 57.18 54.29 61.98 Co-Attack [10] 29.78 41.13 32.01 43.02 53.41 60.24 97.64 98.31 SGA [5] 36.59 46.34 38.47 48.71 62.07 67.59 99.89 99.97 DRA [37] 41.40 52.25 43.62 54.15 70.43 74.14 99.80 99.92 TMM [38] 38.67 54.21 36.56 55.83 64.51 68.12 97.27 97.78 SA-AET [33] 44.01 55.42 47.01 57.39 73.67 76.90 100.0 99.92 GLEAM [39] 49.53 57.17 52.51 60.60 75.98 81.12 100.0 100.0 
+
+DeBias-Attack 66.72 69.89 69.21 71.50 85.23 87.75 100.0 100.0 
+
+TABLE III PERFORMANCE COMPARISON ON THE ITR → VG TASK . L OWER VALUES 
+
+(↓) INDICATE BETTER ATTACK PERFORMANCE , AND BOLD VALUES MARK THE BEST RESULT IN EACH COLUMN .
+
+Attack Val ↓ TestA ↓ TestB ↓
+
+Original Input 58.46 65.89 46.25 SGA [5] 50.45 57.71 41.34 DRA [37] 49.02 56.23 42.21 SA-AET [33] 46.03 53.13 37.12 GLEAM [39] 45.51 54.34 36.84 DeBias-Attack 44.31 50.52 36.14 
+
+prompted to “describe this picture within 50 words.” Because MLLM outputs are free-form, lexical overlap alone may miss semantic failures. We therefore measure semantic alignment with CLIP image-text cosine similarity and count success when adversarial similarity falls below the corresponding 
+
+TABLE IV PERFORMANCE COMPARISON ON THE ITR → IC TASK . L OWER VALUES 
+
+(↓) INDICATE BETTER ATTACK PERFORMANCE , AND BOLD VALUES MARK THE BEST RESULT IN EACH COLUMN .                                       
+
+> B@4 ↓METEOR ↓ROUGE-L ↓CIDEr ↓SPICE ↓
+> Original Input 39.7 31.0 60.0 133.3 23.8 SGA [5] 29.1 24.3 51.5 91.2 17.8 DRA [37] 26.6 24.6 48.6 86.9 16.9 SA-AET [33] 20.8 20.5 44.7 65.9 13.4 GLEAM [39] 19.8 19.3 42.8 59.7 12.4 DeBias-Attack 18.1 18.7 42.8 56.3 11.9
+
+mean similarity on original inputs. Additional qualitative ex-amples, including Qwen3-VL results, are provided in Ap-pendix B. Table VII shows that DeBias-Attack achieves higher ASR, lower similarity, and higher mASR than SA-AET on all five MLLMs. It improves ASR from 52.71% to 67.71% on Claude-3.5 and from 58.70% to 67.46% on GPT-4o. Since mASR averages success rates over reference similarity levels from 0.20 to 0.40 with a step size of 0.005, the advantage is not JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 11 
+
+TABLE V INPUT ABLATION FOR THE REFERENCE ADVERSARIAL GRADIENT ON FLICKR 30K WITH ALBEF AS THE SURROGATE . TR/IR REPORT R@1 ASR (%); 
+
+> HIGHER IS BETTER
+
+, BOLD MARKS COLUMN -WISE BEST VALUES (TIES INCLUDED ), AND PARENTHESES SHOW DROPS FROM THE BEST .                                                   
+
+> Reference input ALBEF TCL CLIP ViT CLIP CNN
+> TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 Mean + Low-var. noise 100.00 100.00 91.89 92.33 70.06 73.26 70.88 74.96
+> Low-var. noise 100.00 100.00 91.25 ( ↓0.64) 91.24 ( ↓1.09) 68.71 ( ↓1.35) 72.71 ( ↓0.55) 70.26 ( ↓0.62) 74.51 ( ↓0.45) Mean + High-var. noise 100.00 100.00 90.20 ( ↓1.69) 90.71 ( ↓1.62) 67.36 ( ↓2.70) 71.26 ( ↓2.00) 67.69 ( ↓3.19) 72.73 ( ↓2.23) High-var. noise 100.00 100.00 88.94 ( ↓2.95) 90.55 ( ↓1.78) 66.01 ( ↓4.05) 71.36 ( ↓1.90) 69.22 ( ↓1.66) 72.59 ( ↓2.37) Mean 100.00 100.00 88.83 ( ↓3.06) 90.45 ( ↓1.88) 65.89 ( ↓4.17) 71.42 ( ↓1.84) 69.35 ( ↓1.53) 72.45 ( ↓2.51)
+
+TABLE VI R@1 ATTACK SUCCESS RATES (%) ON FLICKR 30K WITH ABLATIONS ON THE CORRECTION STRENGTH β USING ALBEF AS THE SURROGATE MODEL .TR AND IR DENOTE TEXT RETRIEVAL AND IMAGE RETRIEVAL , RESPECTIVELY . H IGHER VALUES INDICATE STRONGER ATTACKS , AND BOLD VALUES MARK THE BEST RESULT IN EACH COLUMN .
+
+ALBEF TCL CLIP ViT CLIP CNN 
+
+β TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 TR R@1 IR R@1 0 100.0 100.0 93.26 93.33 56.93 65.85 59.26 66.69 0.5 100.0 100.0 92.25 91.43 61.10 67.91 64.62 70.57 0.7 100.0 100.0 91.21 90.62 63.93 69.20 67.05 72.01 0.8 100.0 100.0 91.30 91.69 66.47 71.82 67.13 72.62 
+
+0.9 100.0 100.0 91.89 92.33 70.06 73.26 70.88 74.96 
+
+1.0 100.0 100.0 89.46 91.31 63.93 69.46 66.92 71.70 1.3 100.0 100.0 89.15 91.19 63.56 69.52 66.82 71.60 1.5 100.0 100.0 88.72 90.57 61.60 67.26 64.50 70.67 TABLE VII PERFORMANCE COMPARISON ON MLLM ATTACK TRANSFER . H IGHER 
+
+ASR AND M ASR ( ↑) AND LOWER SIM . ( ↓) INDICATE STRONGER ATTACKS , AND BOLD VALUES MARK THE BEST RESULT IN EACH COLUMN .
+
+MLLM Method ASR ↑ Sim. ↓ mASR ↑
+
+BLIP-2 SA-AET 3.70 0.3108 44.74 DeBias-Attack 10.50 0.2973 51.29 
+
+Qwen2-VL SA-AET 19.90 0.3151 42.69 DeBias-Attack 30.80 0.3017 49.08 
+
+Claude-3.5 SA-AET 52.71 0.3123 44.05 DeBias-Attack 67.71 0.2981 50.95 
+
+GPT-4o SA-AET 58.70 0.3390 31.18 DeBias-Attack 67.46 0.3299 35.53 
+
+GPT-4o-mini SA-AET 55.36 0.3328 34.05 DeBias-Attack 62.37 0.3264 37.11 
+
+tied to a single threshold. Similar improvements on BLIP-2, Qwen2-VL, and GPT-4o-mini show that the perturbations remain effective beyond standard VLP evaluation models. These MLLM targets differ from the surrogate VLP model in architecture, training data, and generation behavior. The reduction in semantic similarity suggests that debiased per-turbations transfer beyond retrieval models and can influence open-ended multimodal generation. This result is important from a security perspective because the attack is optimized only against a retrieval-style VLP surrogate but still affects instruction-following multimodal systems. We also conduct a sample-level comparison with SA-AET on Flickr30K. For each image, DeBias-Attack is counted as a win if it produces a lower CLIP image-text cosine similarity 
+
+TABLE VIII SAMPLE -LEVEL COMPARISON WITH SA-AET ON MLLM ATTACK TRANSFER . W INS AND LOSSES ARE COUNTED PER SAMPLE ; HIGHER WIN RATE (↑) INDICATES BETTER ATTACK PERFORMANCE , AND BOLD VALUES MARK THE REPORTED WIN RATES .
+
+MLLM Wins Losses Win Rate ↑
+
+BLIP-2 603 252 70.53 
+
+Qwen2-VL 634 354 64.17 
+
+Claude-3.5 322 158 67.08 
+
+GPT-4o 576 347 62.41 
+
+GPT-4o-mini 549 420 56.66 
+
+than SA-AET; ties are omitted. Table VIII records more wins than losses on all evaluated MLLMs, including 603 versus 252 on BLIP-2, 634 versus 354 on Qwen2-VL, and 576 versus 347 on GPT-4o. The advantage is distributed broadly across samples, indicating a consistent sample-level gain. This pairwise view reduces dependence on a single success threshold and confirms that the improvement is visible at the individual-example level. VI. C ONCLUSION 
+
+We introduced DeBias-Attack, a transfer-based adversarial attack framework for VLP models. DeBias-Attack addresses surrogate-specific bias through bias-guided gradient correction during perturbation optimization. It learns a main perturbation on the original image and a reference perturbation on random-ized weak-semantic images. The reference perturbation is sep-arated from the main perturbation and evaluated on the original image to provide a gradient that reflects surrogate-specific bias. The debiased perturbation is updated by combining its JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 12 
+
+own adversarial gradient with the corrected direction derived from the main and reference gradients, while the textual perturbation is refined with the updated debiased adversarial image. The generated adversarial image-text pairs preserve at-tack strength while reducing dependence on surrogate-specific bias. Experiments show that DeBias-Attack improves black-box transferability across VLP models, downstream tasks, and real-world multimodal large language models, with clear gains under heterogeneous model transfer. Correcting surrogate-specific bias during optimization improves transfer-based VLP attacks. Future work will extend this direction to broader multimodal scenarios and investigate defenses that can identify or reduce transferable cross-modal semantic misalignment. ACKNOWLEDGMENTS 
+
+This work is supported by the National Natural Sci-ence Foundation of China under Grants No.62472092, No.62172089, and No.62106045; the Natural Science Foun-dation of Jiangsu Province under Grant No.BK20241751; Jiangsu Provincial Key Laboratory of Computer Networking Technology; Jiangsu Provincial Key Laboratory of Network and Information Security under Grant No.BM2003201; Key Laboratory of Computer Network and Information Integration of Ministry of Education of China under Grant No.93K-9; Nanjing Purple Mountain Laboratories; and Fintech and Big Data Laboratory of Southeast University. We thank the Big Data Computing Center of Southeast University for computa-tional support. REFERENCES [1] J. Li, R. Selvaraju, A. Gotmare, S. Joty, C. Xiong, and S. C. H. Hoi, “Align before fuse: Vision and language representation learning with momentum distillation,” Advances in neural information processing systems , vol. 34, pp. 9694–9705, 2021. [2] J. Li, D. Li, C. Xiong, and S. Hoi, “Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation,” in International conference on machine learning . PMLR, 2022, pp. 12 888–12 900. [3] J. Li, D. Li, S. Savarese, and S. Hoi, “Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models,” in International conference on machine learning . PMLR, 2023, pp. 19 730–19 742. [4] A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu, “Towards deep learning models resistant to adversarial attacks,” arXiv preprint arXiv:1706.06083 , 2017. [5] D. Lu, Z. Wang, T. Wang, W. Guan, H. Gao, and F. Zheng, “Set-level guidance attack: Boosting adversarial transferability of vision-language pre-training models,” in Proceedings of the IEEE/CVF International Conference on Computer Vision , 2023, pp. 102–111. [6] I. J. Goodfellow, J. Shlens, and C. Szegedy, “Explaining and harnessing adversarial examples,” arXiv preprint arXiv:1412.6572 , 2014. [7] L. Li, R. Ma, Q. Guo, X. Xue, and X. Qiu, “Bert-attack: Adversarial attack against bert using bert,” in Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , 2020, pp. 6193–6202. [8] J. Yang, J. Duan, S. Tran, Y. Xu, S. Chanda, L. Chen, B. Zeng, T. Chilimbi, and J. Huang, “Vision-language pre-training with triple contrastive learning,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2022, pp. 15 671–15 680. [9] J. Gu, X. Jia, P. de Jorge, W. Yu, X. Liu, A. Ma, Y. Xun, A. Hu, A. Khakzar, Z. Li, X. Cao, and P. Torr, “A survey on transferability of adversarial examples across deep neural networks,” 
+
+Transactions on Machine Learning Research , 2024. [Online]. Available: https://openreview.net/forum?id=AYJ3m7BocI [10] J. Zhang, Q. Yi, and J. Sang, “Towards adversarial attack on vision-language pre-training models,” in Proceedings of the 30th ACM Inter-national Conference on Multimedia , 2022, pp. 5005–5013. [11] H. Luo, J. Gu, F. Liu, and P. Torr, “An image is worth 1000 lies: Adversarial transferability across prompts on vision-language models,” 
+
+arXiv preprint arXiv:2403.09766 , 2024. [12] J. Wang, A. Liu, Z. Yin, S. Liu, S. Tang, and X. Liu, “Dual attention suppression attack: Generate adversarial camouflage in physical world,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2021, pp. 8565–8574. [13] Y. Zhang, Y.-a. Tan, T. Chen, X. Liu, Q. Zhang, and Y. Li, “Enhancing the transferability of adversarial examples with random patch.” in IJCAI ,vol. 8, 2022, p. 13. [14] Z. Zhao, H. Zhang, R. Li, R. Sicre, L. Amsaleg, M. Backes, Q. Li, and C. Shen, “Revisiting transferable adversarial image examples: Attack categorization, evaluation guidelines, and new insights,” arXiv preprint arXiv:2310.11850 , 2023. [15] Y. Wang, J. Wang, Z. Yin, R. Gong, J. Wang, A. Liu, and X. Liu, “Gen-erating transferable adversarial examples against vision transformers,” in 
+
+Proceedings of the 30th ACM International Conference on Multimedia ,2022, pp. 5181–5190. [16] Z. Wang, H. Guo, Z. Zhang, W. Liu, Z. Qin, and K. Ren, “Feature importance-aware transferable adversarial attacks,” in Proceedings of the IEEE/CVF international conference on computer vision , 2021, pp. 7639– 7648. [17] Z. Zhao, Z. Liu, and M. Larson, “On success and simplicity: A second look at transferable targeted attacks,” Advances in Neural Information Processing Systems , vol. 34, pp. 6115–6128, 2021. [18] A. Demontis, M. Melis, M. Pintor, M. Jagielski, B. Biggio, A. Oprea, C. Nita-Rotaru, and F. Roli, “Why do adversarial attacks transfer? explaining transferability of evasion and poisoning attacks,” in 28th USENIX security symposium (USENIX security 19) , 2019, pp. 321–338. [19] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark et al. , “Learning transferable visual models from natural language supervision,” in International conference on machine learning . PMLR, 2021, pp. 8748–8763. [20] A. Dosovitskiy, “An image is worth 16x16 words: Transformers for image recognition at scale,” arXiv preprint arXiv:2010.11929 , 2020. [21] Y.-C. Chen, L. Li, L. Yu, A. El Kholy, F. Ahmed, Z. Gan, Y. Cheng, and J. Liu, “Uniter: Universal image-text representation learning,” in 
+
+European conference on computer vision . Springer, 2020, pp. 104– 120. [22] H. Tan and M. Bansal, “Lxmert: Learning cross-modality encoder representations from transformers,” arXiv preprint arXiv:1908.07490 ,2019. [23] J. Lu, D. Batra, D. Parikh, and S. Lee, “Vilbert: Pretraining task-agnostic visiolinguistic representations for vision-and-language tasks,” Advances in neural information processing systems , vol. 32, 2019. [24] L. Yang, Y. Xu, C. Yuan, W. Liu, B. Li, and W. Hu, “Improving visual grounding with visual-linguistic verification and iterative reasoning,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2022, pp. 9499–9508. [25] C. Zhu, Y. Zhou, Y. Shen, G. Luo, X. Pan, M. Lin, C. Chen, L. Cao, X. Sun, and R. Ji, “Seqtr: A simple yet universal network for visual grounding,” in European Conference on Computer Vision . Springer, 2022, pp. 598–615. [26] J. Deng, Z. Yang, T. Chen, W. Zhou, and H. Li, “Transvg: End-to-end visual grounding with transformers,” in Proceedings of the IEEE/CVF international conference on computer vision , 2021, pp. 1769–1779. [27] M. Z. Hossain, F. Sohel, M. F. Shiratuddin, and H. Laga, “A compre-hensive survey of deep learning for image captioning,” ACM Computing Surveys (CsUR) , vol. 51, no. 6, pp. 1–36, 2019. [28] Z. Zeng, Y. Xie, H. Zhang, C. Chen, B. Chen, and Z. Wang, “Meacap: Memory-augmented zero-shot image captioning,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2024, pp. 14 100–14 110. [29] R. Zellers, Y. Bisk, A. Farhadi, and Y. Choi, “From recognition to cogni-tion: Visual commonsense reasoning,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2019, pp. 6720– 6731. [30] G. Wang, C. Zhou, Y. Wang, B. Chen, H. Guo, and Q. Yan, “Beyond boundaries: A comprehensive survey of transferable attacks on ai systems,” arXiv preprint arXiv:2311.11796 , 2023. [31] Y. Lu, Y. Jia, J. Wang, B. Li, W. Chai, L. Carin, and S. Velipasalar, “Enhancing cross-task black-box transferability of adversarial examples with dispersion reduction,” in Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition , 2020, pp. 940–949. [32] Q. Zeng, Y. Gong, and M. Jiang, “Cross-task attack: A self-supervision generative framework based on attention shift,” in 2024 International Joint Conference on Neural Networks (IJCNN) . IEEE, 2024, pp. 1–8. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 13 
+
+[33] X. Jia, S. Gao, Q. Guo, S. Qin, K. Ma, Y. Huang, Y. Liu, I. Tsang, and X. Cao, “Semantic-aligned adversarial evolution triangle for high-transferability vision-language attack,” IEEE Transactions on Pattern Analysis and Machine Intelligence , vol. 47, no. 10, pp. 8489–8505, 2025. [34] H. Chen, Y. Zhang, Y. Dong, X. Yang, H. Su, and J. Zhu, “Rethinking model ensemble in transfer-based adversarial attacks,” in The Twelfth International Conference on Learning Representations , 2024. [35] J. Fu, Z. Chen, K. Jiang, H. Guo, J. Wang, S. Gao, and W. Zhang, “Improving adversarial transferability of vision-language pre-training models through collaborative multimodal interaction,” arXiv preprint arXiv:2403.10883 , 2024. [36] S. Fares, K. Ziu, T. Aremu, N. Durasov, M. Tak´ aˇ c, P. Fua, K. Nan-dakumar, and I. Laptev, “Mirrorcheck: Efficient adversarial defense for vision-language models,” arXiv preprint arXiv:2406.09250 , 2024. [37] S. Gao, X. Jia, X. Ren, I. Tsang, and Q. Guo, “Boosting transferability in vision-language attacks via diversification along the intersection region of adversarial trajectory,” in European Conference on Computer Vision .Springer, 2024, pp. 442–460. [38] H. Wang, K. Dong, Z. Zhu, H. Qin, A. Liu, X. Fang, J. Wang, and X. Liu, “Transferable multimodal attack on vision-language pre-training models,” in 2024 IEEE Symposium on Security and Privacy (SP) . IEEE, 2024, pp. 1722–1740. [39] Y. Liu, X. Ouyang, and X. Cui, “Gleam: Enhanced transferable ad-versarial attacks for vision-language pre-training models via global-local transformations,” in Proceedings of the IEEE/CVF International Conference on Computer Vision , 2025, pp. 1665–1674. [40] B. A. Plummer, L. Wang, C. M. Cervantes, J. C. Caicedo, J. Hocken-maier, and S. Lazebnik, “Flickr30k entities: Collecting region-to-phrase correspondences for richer image-to-sentence models,” in Proceedings of the IEEE international conference on computer vision , 2015, pp. 2641– 2649. [41] T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan, P. Doll´ ar, and C. L. Zitnick, “Microsoft coco: Common objects in context,” in European conference on computer vision . Springer, 2014, pp. 740–755. [42] L. Yu, P. Poirson, S. Yang, A. C. Berg, and T. L. Berg, “Modeling context in referring expressions,” in European conference on computer vision . Springer, 2016, pp. 69–85. [43] K. Papineni, S. Roukos, T. Ward, and W.-J. Zhu, “Bleu: a method for automatic evaluation of machine translation,” in Proceedings of the 40th annual meeting of the Association for Computational Linguistics , 2002, pp. 311–318. [44] S. Banerjee and A. Lavie, “Meteor: An automatic metric for mt evalua-tion with improved correlation with human judgments,” in Proceedings of the acl workshop on intrinsic and extrinsic evaluation measures for machine translation and/or summarization , 2005, pp. 65–72. [45] C.-Y. Lin, “Rouge: A package for automatic evaluation of summaries,” in Text summarization branches out , 2004, pp. 74–81. [46] R. Vedantam, C. Lawrence Zitnick, and D. Parikh, “Cider: Consensus-based image description evaluation,” in Proceedings of the IEEE confer-ence on computer vision and pattern recognition , 2015, pp. 4566–4575. [47] P. Anderson, B. Fernando, M. Johnson, and S. Gould, “Spice: Semantic propositional image caption evaluation,” in European conference on computer vision . Springer, 2016, pp. 382–398. [48] J. Morris, E. Lifland, J. Lanchantin, Y. Ji, and Y. Qi, “Reevaluating adversarial examples in natural language,” in Findings of the association for computational linguistics: EMNLP 2020 , 2020, pp. 3829–3839. 
+
+Lijia Yu received the B.S. degree in computer science and technology from Nanchang University, Nanchang, China, in 2023. He is currently pursuing the Ph.D. degree with the School of Cyber Sci-ence and Engineering, Southeast University, Nan-jing, China, under the supervision of Prof. Jiuxin Cao. His research interests include the security and robustness of multimodal models, adversarial at-tacks, robustness evaluation, and trustworthy mul-timodal learning. 
+
+Jiuxin Cao received the Ph.D. degree in computer science and technology from Xi’an Jiaotong Uni-versity, Xi’an, China, in 2003. He is currently a Full Professor with the School of Cyber Science and Engineering, Southeast University, China. He is the Leader of the Jiangsu Provincial Key Laboratory of Computer Network Technology and the principal investigator of several national projects in China. He has published more than 100 papers in journals and conferences, including IJCAI, ACM MM, WWW, TIP, and IEEE TCSS. His main research interests include AI security, computational society, and cross-modality media fusion. 
+
+Yuchen Qiang received the B.S. degree in Inter-net of Things from Jiangsu University, Zhenjiang, China, in 2023. He is currently pursuing the Ph.D. degree with the School of Cyber Science and Engi-neering, Southeast University, Nanjing, China, under the supervision of Prof. Jiuxin Cao. His research interests include anomaly detection, vision represen-tation learning, and industrial applications. He works on algorithms and systems for anomaly detection in industrial environments and vision-based real-time monitoring. 
+
+Changhao Chen received the B.S. degree in cyber science and engineering from Southeast University, Nanjing, China, in 2025. He is currently pursuing the M.S. degree in cyber science and engineering with the School of Cyber Science and Engineering, Southeast University, under the supervision of Prof. Jiuxin Cao. His work focuses on multimodal model security, including adversarial attacks and defenses for multimodal learning systems. His main research interests include multimodal learning, AI security, and the adversarial robustness of visual and multi-modal models. 
+
+Yifei Huang received the B.S. degree in cyber science and engineering from Southeast University, Nanjing, China, in 2022. He is currently working toward the Ph.D. degree in cyber science and en-gineering with the School of Cyber Science and Engineering, Southeast University, Nanjing, China, under the supervision of Prof. Jiuxin Cao. His re-search interests include natural language processing, large language model-generated text augmentation, large language model-generated text detection and provenance tracing, and large language model text watermarking. 
+
+Bo Liu received the Ph.D. degree from Southeast University, Nanjing, China. She is currently a Full Professor with the School of Computer Science and Engineering, Southeast University. She is the principal investigator of several national projects in China. She has published over 80 papers in major journals and international conferences, such as ACL, WWW, KDD, IEEE/ACM Transactions on Networking (TON), and IEEE Transactions on Neu-ral Networks and Learning Systems (TNNLS). Her current research interests include network anomaly detection, network behavior analysis, user behavior analysis in social net-works, trustworthiness of large language models, and social influence. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 14 
+
+# Appendix 
+
+A. T HEORETICAL ANALYSIS OF DEBIAS -A TTACK 
+
+We analyze why bias-guided gradient correction can reduce surrogate-specific components and improve black-box transfer-ability. The analysis focuses on image-side optimization and omits the text update. It states the corrected update rule and derives a condition under which this correction improves the loss of a held-out target model under a first-order approxima-tion. 
+
+Proposition 1 (Reference-gradient correction). At itera-tion t, let ls(·, ·) denote the projected misalignment score of the surrogate model. The main adversarial gradient and the reference adversarial gradient are 
+
+∇(t) 
+
+> m
+
+= ∇δ(t)
+
+> m
+
+ls
+
+
+
+xI + δ(t) 
+
+> m
+
+, ˜x(t)
+
+> T
+
+
+
+,
+
+∇(t) 
+
+> r
+
+= ∇δ(t)
+
+> r
+
+ls
+
+
+
+xI + δ(t) 
+
+> r
+
+, ˜x(t)
+
+> T
+
+
+
+.
+
+(A.1) The positive projection coefficient and the corrected direction are defined as 
+
+c(t) =max 
+
+D 
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+, 0
+
+
+
+∇(t)
+
+> r
+> 22
+
++ ϵnum 
+
+, (A.2) 
+
+d(t)corr = ∇(t) 
+
+> m
+
+− βc (t)∇(t) 
+
+> r
+
+, (A.3) where β > 0 is the correction strength and ϵnum is a small numerical constant. Then the corrected direction satisfies 
+
+D
+
+d(t)corr , ∇(t)
+
+> r
+
+E
+
+=
+
+D
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+− βc (t) ∇(t)
+
+> r
+> 22
+
+. (A.4) When 
+
+D
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+> 0, the overlap with the reference adversarial gradient is reduced by a non-negative amount. When 
+
+D
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+≤ 0, c(t) = 0 and no correction is applied. 
+
+Proof. Substituting Eq. (A.2) into Eq. (A.3), we have 
+
+D
+
+d(t)corr , ∇(t)
+
+> r
+
+E
+
+=
+
+D
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+− βc (t) D
+
+∇(t) 
+
+> r
+
+, ∇(t)
+
+> r
+
+E
+
+=
+
+D
+
+∇(t) 
+
+> m
+
+, ∇(t)
+
+> r
+
+E
+
+− βc (t) ∇(t)
+
+> r
+> 22
+
+.
+
+(A.5) This proves Eq. (A.4). If the main and reference gradients are positively aligned, c(t) > 0 and the second term in Eq. (A.4) is non-negative. Otherwise, the maximum operator in Eq. (A.2) gives c(t) = 0 . This completes the proof. 
+
+Proposition 2 (Projected-sign implementation). Let the continuous raw and corrected update directions be 
+
+u(t)raw = ∇δ(t)
+
+> I
+
+ls
+
+
+
+xI + δ(t) 
+
+> I
+
+, ˜x(t)
+
+> T
+
+
+
++ ∇(t) 
+
+> m
+
+,
+
+u(t) = ∇δ(t)
+
+> I
+
+ls
+
+
+
+xI + δ(t) 
+
+> I
+
+, ˜x(t)
+
+> T
+
+
+
++ d(t)corr .
+
+(A.6) Define the signed directions as 
+
+s(t)raw = sign 
+
+
+
+u(t)raw 
+
+
+
+, s(t)corr = sign 
+
+
+
+u(t)
+
+, (A.7) and the actual projected displacement induced by a signed direction s as 
+
+q(s) = Π ε
+
+
+
+δ(t) 
+
+> I
+
++ αs
+
+
+
+− δ(t) 
+
+> I
+
+. (A.8) Away from zero-sign boundary points and non-informative sat-urated coordinates, the implemented projected-sign correction does not increase the overlap with the reference gradient: 
+
+D
+
+q
+
+
+
+s(t)corr 
+
+
+
+, ∇(t)
+
+> r
+
+E
+
+≤
+
+D
+
+q
+
+
+
+s(t)raw 
+
+
+
+, ∇(t)
+
+> r
+
+E
+
+. (A.9) 
+
+Proof. By Eq. (A.3), we have 
+
+u(t) = u(t)raw − βc (t)∇(t) 
+
+> r
+
+. (A.10) For each coordinate j, the corrected update shifts u(t)raw ,j in the direction opposite to ∇(t) 
+
+> r,j
+
+. Hence 
+
+sign 
+
+
+
+u(t)
+
+> j
+
+
+
+∇(t) 
+
+> r,j
+
+≤ sign 
+
+
+
+u(t)raw ,j 
+
+
+
+∇(t) 
+
+> r,j
+
+. (A.11) Summing Eq. (A.11) over all coordinates gives 
+
+D
+
+s(t)corr , ∇(t)
+
+> r
+
+E
+
+≤
+
+D
+
+s(t)raw , ∇(t)
+
+> r
+
+E
+
+. (A.12) The projection Πε clips each coordinate separately. It can reduce the magnitude of a signed step but does not reverse its sign. After removing coordinates that are already saturated and cannot move, Eq. (A.12) implies Eq. (A.9). This completes the proof. 
+
+Theorem 1 (Target-loss improvement condition). Let 
+
+lτ (·, ·) denote the projected misalignment score of a held-out target model τ , and let 
+
+∇(t) 
+
+> τ
+
+= ∇xlτ
+
+
+
+xI + δ(t) 
+
+> I
+
+, ˜x(t)
+
+> T
+
+
+
+(A.13) be the local target gradient. Under a first-order approximation, the corrected update improves the target-model misalignment score over the uncorrected update if 
+
+α > 0, β > 0, c(t) > 0,
+
+D
+
+∇(t) 
+
+> τ
+
+, ∇(t)
+
+> r
+
+E
+
+< 0. (A.14) 
+
+Proof. By the first-order Taylor approximation, one image-side update changes the target-model loss by 
+
+∆l(t) 
+
+> τ
+
+≈ α
+
+D
+
+∇(t) 
+
+> τ
+
+, u(t)E
+
+. (A.15) Meanwhile, the corresponding raw update gives 
+
+∆l(t) 
+
+> τ, raw
+
+≈ α
+
+D
+
+∇(t) 
+
+> τ
+
+, u(t)raw 
+
+E
+
+. (A.16) Substituting Eq. (A.10) into Eq. (A.15), we have 
+
+∆l(t) 
+
+> τ
+
+≈ α
+
+D
+
+∇(t) 
+
+> τ
+
+, u(t)raw − βc (t)∇(t)
+
+> r
+
+E
+
+= ∆ l(t) 
+
+> τ, raw
+
+− αβc (t) D
+
+∇(t) 
+
+> τ
+
+, ∇(t)
+
+> r
+
+E
+
+.
+
+(A.17) 
+
+∆l(t) 
+
+> τ
+
+− ∆l(t) 
+
+> τ, raw
+
+≈ − αβc (t) D
+
+∇(t) 
+
+> τ
+
+, ∇(t)
+
+> r
+
+E
+
+. (A.18) When the conditions in Eq. (A.14) hold, the right-hand side of Eq. (A.18) is positive. Hence ∆l(t) 
+
+> τ
+
+> ∆l(t)
+
+> τ, raw
+
+, so the corrected update improves the target-model misalignment score over the raw update. If 
+
+D
+
+∇(t) 
+
+> τ
+
+, ∇(t)
+
+> r
+
+E
+
+= 0 , the first-order effect is neutral. If 
+
+D
+
+∇(t) 
+
+> τ
+
+, ∇(t)
+
+> r
+
+E
+
+> 0, the correction may reduce the target loss. This completes the proof. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 15 GPT-4o  Qwen3-VL                                  
+
+> Fig. A.1. Qualitative MLLM transfer examples. The examples compare responses before and after attack; misleading or incomplete adversarial responses indicate stronger transfer. TABLE A.1 HELD -OUT TARGET DIAGNOSTIC COMPARING THE MAIN ADVERSARIAL PERTURBATION δmWITHOUT DEBIASING AND THE FINAL DEBIASED ADVERSARIAL PERTURBATION δIOF DEBIAS -A TTACK USING ALBEF AS THE SURROGATE ON FLICKR 30K. H IGHER LOSS AND GAIN INDICATE STRONGER TARGET MISALIGNMENT .Target cos( ∇τ,δI−δm)δmδIGain Win rate TCL 0.0082 -0.7861 -0.5272 0.2589 99.1 CLIP ViT 0.0011 -1.3857 -1.3477 0.0380 75.9 CLIP CNN 0.0008 -2.2037 -2.1693 0.0344 79.1
+
+We also provide a perturbation-level diagnostic using held-out white-box target models, where target gradients are used only for analysis. We compare the main adversarial image 
+
+xI + δm without debiasing with the final debiased adversarial image xI + δI produced by DeBias-Attack. Table A.1 shows that DeBias-Attack gives higher target misalignment loss than the uncorrected main adversarial image. On TCL, the loss increases from −0.7861 to −0.5272 , with a gain of 0.2589 
+
+and a win rate of 99 .1% . DeBias-Attack also improves the target loss by 0.0380 on CLIP ViT and 0.0344 on CLIP CNN .The cosine between the debiasing component δI − δm and the target gradient is small but positive, with mean values of 
+
+0.0082 , 0.0011 , and 0.0008 on TCL, CLIP ViT , and CLIP CNN .The reference adversarial gradient is estimated from weak-semantic images and evaluated under the original-image con-text, so it can expose surrogate-preferred directions. By updat-ing the final debiased perturbation δI with the corrected di-rection, DeBias-Attack reduces dependence on the uncorrected main perturbation δm while preserving adversarial optimiza-tion. The perturbation-level diagnostic shows higher target-side misalignment than the uncorrected main perturbation on held-out target models. B. Q UALITATIVE ADVERSARIAL EXAMPLES 
+
+Figure A.1 shows qualitative examples of MLLM attack transfer on GPT-4o and Qwen3-VL. As in the quantitative setting, these adversarial examples are generated on ALBEF. After attack, reasonable descriptions are replaced by mis-leading, incomplete, or hallucinatory content. Some responses still preserve partial semantics, but the examples match the empirical transfer results. C. A TTENTION VISUALIZATION AND MODALITY 
+
+ABLATION 
+
+Figure C.1 visualizes attention maps under different attack methods. A successful adversarial example should disrupt the model’s focus on correct grounding regions, producing dispersed or misaligned attention. All adversarial examples are crafted using ALBEF as the surrogate model and evaluated on two targets: TCL, which shares a similar architecture with ALBEF, and CLIP CNN , which differs in design. Compared with SA-AET and SGA, DeBias-Attack induces broader and less concentrated attention, indicating stronger interference with grounding behavior. On TCL, SA-AET retains partial focus near the main object, whereas DeBias-Attack diffuses attention toward background regions. On CLIP CNN , SGA maintains some activation on target-relevant areas, but DeBias-Attack scatters attention across peripheral or irrelevant regions, such as surrounding textures or secondary objects. DeBias-Attack alters prediction outputs and degrades the model’s internal localization behavior more than prior ap-proaches. The attention dispersion matches the design: the debiased perturbation is updated with a corrected direction that reduces surrogate-specific bias while preserving cross-modal attack strength. We conduct a modality-level ablation study on Flickr30K using ALBEF as the surrogate model. Figure C.2 reports ASR JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 16 Original     
+
+> TCL CLIP_CNN
+> SA-AET DeBias-Attack SA-AET DeBias-Attack SGA SGA
+
+Fig. C.1. Vision-grounding attention maps under attack. Brighter regions indicate stronger attention, and dispersed or shifted attention suggests stronger disruption of visual grounding. R@1 (TXT) R@1 (IMG) R@1 (TXT) R@1 (IMG) R@1 (TXT) R@1 (IMG) R@1 (TXT) R@1 (IMG)         
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Attack Success Rate (%, R@1)
+> 100.0 100.0
+> 91.2 90.5
+> 64.8
+> 72.3
+> 64.7
+> 68.5
+> 100.0 100.0
+> 83.7 83.0
+> 42.5
+> 45.6
+> 48.8 50.1
+> 17.8
+> 33.3
+> 17.5
+> 32.8
+> 37.5
+> 48.6
+> 35.6
+> 45.6
+> ALBEF TCL CLIP_ViT CLIP_CNN
+> Full
+> w/o Text
+> w/o Image
+
+Fig. C.2. Modality-level ablation on retrieval tasks. Higher ASR indicates a stronger attack, and comparing variants shows the contribution of each optimized modality. 
+
+for text retrieval and image retrieval across target models under the full, w/o text, and w/o image settings. The full configuration achieves the highest ASR across all models. For related models such as ALBEF and TCL, removing image-side perturbations causes a larger performance drop, indicating that visual perturbations dominate transfer when the models share similar alignment behavior. For heterogeneous models such as CLIP CNN and CLIP ViT , the gap between the two variants narrows, suggesting that both modalities contribute to transferable cross-modal misalignment. Image-side correction and text-side substitution are complementary: the image update reduces surrogate-specific bias, while the text update strengthens semantic misalignment with the updated adversarial image. D. D EFENSE EVALUATION 
+
+We evaluate DeBias-Attack under two test-time defenses. Random transform (RT) applies stochastic image transfor-mations at inference and aggregates similarities. Language-Tool (LT) [48] performs grammar-based text normalization to sanitize perturbed tokens. We report ASR for TR and IR. In Table D.1, each cell shows the defended ASR and JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 17 
+
+TABLE D.1 COMPARISON OF DIFFERENT DEFENSE METHODS ON MSCOCO. E ACH CELL REPORTS DEFENDED ASR AND THE CHANGE RELATIVE TO THE UNDEFENDED SETTING ; LOWER ASR ( ↓) AND LARGER POSITIVE REDUCTIONS INDICATE STRONGER MITIGATION .
+
+Models Defense Method MSCOCO TR ↓ IR ↓
+
+ALBEF RT 99.68/0.32 99.60/0.40 LT 99.92/0.08 99.84/0.16 TCL RT 88.91/1.29 89.85/0.30 LT 93.43/-3.24 93.68/-3.53 CLIP ViT 
+
+RT 69.74/4.07 75.75/1.54 LT 70.77/3.04 76.73/0.57 CLIP CNN 
+
+RT 72.12/0.07 77.01/0.37 LT 72.35/-0.17 77.34/0.05 
+
+its change relative to the undefended model. A larger posi-tive change indicates stronger mitigation, whereas a negative change means that the defense fails to reduce the attack and can even increase ASR by a small amount. DeBias-Attack survives both defenses across models, so these off-the-shelf defenses provide limited protection against transferable cross-modal semantic misalignment.
