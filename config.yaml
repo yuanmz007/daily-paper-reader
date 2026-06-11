@@ -25,5 +25,69 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
-  intent_profiles: []
-source_backends: {}
+  intent_profiles:
+    - tag: sem-vis-atk
+      description: >-
+        搜索2025-2026年针对多模态模型的语义级视觉攻击论文。目标论文通过操纵人类可解释的视觉语义（如对象、属性、关系、场景、局部概念或细粒度图像内容）攻击VLMs、LVLMs或MLLMs。优先考虑非进化方法，生成或编辑语义视觉内容以误导模型输出，如字幕、VQA答案、识别、幻觉或视觉推理。排除主要基于OCR文本、印刷提示、隐藏指令、隐写术、代码截图、漫画、文本越狱、纯像素噪声、综述、基准或仅防御方法的论文。
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: semantic visual attack
+          keyword_cn: 语义视觉攻击
+          query: >-
+            adversarial attacks that manipulate semantic visual content such as objects, attributes, or scenes in images
+            to fool vision-language models
+        - keyword: vision-language model attack
+          keyword_cn: 视觉语言模型攻击
+          query: attacks targeting vision-language models that exploit human-interpretable visual modifications
+        - keyword: multimodal adversarial example
+          keyword_cn: 多模态对抗样本
+          query: adversarial examples created by modifying visual semantics to mislead multimodal large language models
+        - keyword: visual concept attack
+          keyword_cn: 视觉概念攻击
+          query: inducing visual hallucinations in multimodal models by modifying image content semantically
+        - keyword: fine-grained visual perturbation
+          keyword_cn: 细粒度视觉扰动
+          query: semantic-level perturbations to images for attacking vision-language models
+      intent_queries:
+        - query: >-
+            adversarial attacks on vision language models that edit visual semantics such as objects and scenes to
+            produce incorrect outputs
+          query_cn: 通过编辑视觉语义（如对象和场景）对视觉语言模型进行对抗性攻击，以产生错误输出
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            methods for generating semantic adversarial examples against multimodal large language models by
+            manipulating image content
+          query_cn: 通过操纵图像内容生成针对多模态大语言模型的语义对抗样本的方法
+          enabled: true
+          source: manual
+          note: ''
+        - query: semantic level visual attacks that cause hallucination or misclassification in multimodal models
+          query_cn: 在多模态模型中引起幻觉或误分类的语义级视觉攻击
+          enabled: true
+          source: manual
+          note: ''
+        - query: non pixel attacks that alter human interpretable visual features to fool vision language pretraining models
+          query_cn: 改变人类可解读的视觉特征以欺骗视觉语言预训练模型的非像素攻击
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-06-11T09:09:19.308Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
