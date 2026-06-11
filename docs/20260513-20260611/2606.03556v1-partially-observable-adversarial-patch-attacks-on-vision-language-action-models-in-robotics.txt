@@ -1,0 +1,449 @@
+Title: Partially Observable Adversarial Patch Attacks on Vision-Language-Action Models in Robotics
+
+URL Source: https://arxiv.org/pdf/2606.03556v1
+
+Published Time: Wed, 03 Jun 2026 01:06:42 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+> IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED MAY 2026 1
+
+# Partially Observable Adversarial Patch Attacks on Vision-Language-Action Models in Robotics 
+
+Xiaofei Wang, Mingliang Han, Tianyu Hao, Yi Yang, Yun-Bo Zhao, and Keke Tang 
+
+Abstract —Vision–language–action (VLA) models are gaining attention in robotics, yet their robustness to adversarial attacks remains largely unexplored. Existing work shows that adversarial patches can mislead VLA-based robots but assumes full access to the entire execution trajectory, an unrealistic requirement in practice. We address this limitation by formulating a partially observable threat model, where the adversary can exploit only a short prefix of the trajectory to generate a fixed patch applied to all subsequent frames. Under this setting, we propose a two-phase framework. First, we localize the patch using the model’s attention maps to identify visually critical regions that correspond to the full instruction. Then, we optimize the patch to disrupt the semantic grounding of target objects and increase the curvature of action trajectories, thereby compounding failures in both perception and control. Extensive experiments in simulation and real-world robotic environments show that our method sustains adversarial effects under partial observability, inducing long-horizon disruptions and significantly reducing task success rates. 
+
+Index Terms —Deep Learning Methods, Manipulation Planning 
+
+I. I NTRODUCTION 
+
+# VISION-language-action (VLA) models have emerged as a powerful paradigm for robotic intelligence [1]–[3]. By jointly integrating visual perception, natural language understanding, and action generation, they promise scalable generalist capabilities across diverse tasks and environments. As these models move toward deployment in domains such as service robotics [4] and manufacturing [5], ensuring their safety and robustness is critical. Prior work in computer 
+
+Received 31 January 2026; Revised 31 March 2026; Accepted 27 May 2026. This paper was recommended for publication by Editor J´ ulia Borr` as Sol upon evaluation of the Associate Editor and Reviewers’ comments. This work was supported by the National Natural Science Foundation of China under Grant 62472117, the Deep Space Exploration Directed Cultivation Fund of USTC, the Guangdong Basic and Applied Basic Research Foundation under Grant 2025A1515010157, the Science and Technology Projects in Guangzhou under Grant 2025A03J0137, and the CCF-NetEase ThunderFire Innovation Research Funding under Grant CCF-Netease 202514. (Corresponding au-thors: Yun-Bo Zhao; Keke Tang.) 
+
+Xiaofei Wang is with the Department of Automation, University of Science and Technology of China, Hefei, China, and also with SmartMore Corporation (e-mail: wxf9545@mail.ustc.edu.cn). Mingliang Han is with the Department of Automation, Univer-sity of Science and Technology of China, Hefei, China (e-mail: ml-han@mail.ustc.edu.cn). Tianyu Hao and Keke Tang are with the Cyberspace Institute of Ad-vanced Technology, Guangzhou University, Guangzhou, China (e-mail: howty666@gmail.com; tangbohutbh@gmail.com). Yi Yang is with the 8th Medical Center of Chinese PLA General Hospital, Beijing, China (e-mail: sheepone0214@gmail.com). Yun-Bo Zhao is with the Department of Automation, University of Science and Technology of China, Hefei, China, and also with the Institute of Artificial Intelligence, Hefei Comprehensive National Science Center, Hefei, China (e-mail: ybzhao@ustc.edu.cn). Digital Object Identifier (DOI): see top of this page. 
+
+Fig. 1. Unlike attacks in fully observable settings that assume access to the entire trajectory, we study adversarial patch attacks on robotic VLA models under partial observability, where only the first few frames are available to design the patch. This setting is more constrained than full-rollout optimization and reflects limited-observation attack scenarios in robotic execution. 
+
+vision has shown that even imperceptible perturbations to input images can cause severe errors in deep models [6], [7], raising the question of how resilient VLA-based robots are to adversarial attacks and what risks such vulnerabilities may pose in practice. Adversarial robustness of VLA models is still largely unex-plored. To our knowledge, the most relevant prior study is by Wang et al. [8], who presented an empirical analysis showing that adding an adversarial patch to the visual input can mislead VLA-based robots. Their results highlight that even simple, physically realizable patches can severely disrupt task execution. However, this study does not provide a principled formulation of the threat model and assumes the adversary can optimize patches with access to the entire rollout, an idealized setting rarely attainable in practice. These limitations motivate the need for a systematic treat-ment of adversarial attacks on VLAs. Notably, real-world adversaries are unlikely to observe entire trajectories; even when observation is possible, they can access at most a short prefix of the execution. This raises the question of whether a single static patch, optimized only from early observations, can still induce long-term disruptive effects. Formulating this partially observable scenario is a key step toward understand-ing practical vulnerabilities of VLA-based robots and guiding the development of more robust models. In this paper, we formulate adversarial patch attacks on VLA models under a partially observable threat model, re- 
+
+> arXiv:2606.03556v1 [cs.RO] 2 Jun 2026 2IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED MAY 2026
+
+flecting the practical constraint that an adversary can exploit only a limited prefix of the execution trajectory, see Fig. 1. This setting captures scenarios where an adversary can place a static physical patch in the robot-visible workspace but cannot observe or optimize over the full future rollout. Building on this formulation, we develop a two-phase attack. First, we localize the patch using the model’s attention maps, placing perturbations in visually critical regions that correspond to the instruction. We then optimize it to disrupt the visual grounding of instruction nouns and amplify trajectory curvature, disturb-ing smooth motion and reliable control. Extensive experiments in simulation and on real robots show that our method sustains strong adversarial effects under partial observability, producing long-horizon disruptions that markedly reduce task success rates and outperform existing baselines. Overall, our contribution is summarized as follows:  
+
+> •
+
+We formulate fully and partially observable threat models for adversarial patch attacks on VLA models, with the latter reflecting practical robotic constraints under limited observation.  
+
+> •
+
+We propose a patch attack framework that exploits vul-nerabilities in perception and control, disrupting semantic grounding and trajectory smoothness.  
+
+> •
+
+We validate the approach through extensive evaluation in simulation and on physical robots under practical conditions. II. R ELATED WORK 
+
+A. Security and Adversarial Attacks on Robots 
+
+As robots are increasingly deployed in manufacturing, healthcare, and service domains [4], [5], their communication, perception, and control pipelines present attractive attack sur-faces [9]. Network attacks such as data injection or denial-of-service (DoS) can disrupt localization and planning [10], and even software frameworks such as the Robot Operating System (ROS) contain exploitable weaknesses [11], [12]. Beyond perception and control, motion planners are also vulnerable to adversarial attacks that mislead trajectory generation and degrade planning reliability [13]. Adversarial manipulation has further been demonstrated in robotic grasping [14]–[16], where subtle pixel-level or shape-based perturbations reduce grasp quality and stability, and in visual SLAM [17], where carefully designed patches compromise localization and mapping. These studies show that modern robotic systems remain exposed across networking, planning, and perception layers despite extensive conventional hardening. 
+
+B. Attacks on VLA Models 
+
+Security threats to VLA models are emerging beyond tradi-tional perception attacks. Text-based jailbreaks adapt prompt-injection techniques from large language models to induce targeted robotic actions [18], and physical-world jailbreaks on embodied LLMs further reveal vulnerabilities in instruction following [19]. Decision-level robustness of LLM-based em-bodied agents has also been examined [20], while backdoor attacks using objective-decoupled optimization expose another persistent threat vector [21]. These studies show that VLA systems can be compromised through language-driven manip-ulation or hidden training-time triggers, even without direct visual perturbations. Visual adversarial attacks on VLA models are less ex-plored. Wang et al. [8] demonstrate that carefully designed adversarial patches can mislead VLA-based robots, but their method assumes full rollout access and lacks a formal threat model, limiting practical applicability. In contrast, our work considers a more constrained partial-observation setting where the adversary observes only a limited prefix of the trajectory and optimizes the patch within it, showing that disruptive visual attacks remain feasible under practical conditions. III. P ROBLEM FORMULATION 
+
+A. Problem Setup 
+
+We consider a vision-language-action (VLA) model f that maps a visual observation xt and a natural language instruction 
+
+l into an action at in the robot’s control space: 
+
+at = f (xt, l ), t = 1 , . . . , T, 
+
+where xt ∈ RH×W ×3 denotes the image at time t, and at ∈
+
+Rd is the executed action. The underlying system state st ∈
+
+Rm evolves according to the transition dynamics 
+
+st+1 = T (st, a t),
+
+where T is the environment transition function. We denote by {at}Tt=1 the clean action sequence and by {st}Tt=1 the corresponding clean state trajectory. The adversary follows a partial-access gray-box setting: it can query the VLA model and use model-side information required for patch optimization, but cannot modify model parameters, directly command robot actions, or alter the robot controller. The adversary can place a single static physical patch within the robot-visible scene. The patch belongs to a feasible set P that constrains its size and pixel intensity for physical realizability. 
+
+B. Fully Observable Patch Attack Setting 
+
+A common formulation assumes that the adversary has access to the entire observation sequence {xt}Tt=1 in advance. The patch is then optimized using all frames of the trajectory and, once learned, applied to every frame of the rollout. The resulting adversarial actions and states are 
+
+{ˆat}Tt=1 = {f (xt ⊕ p, l )}Tt=1 , ˆst+1 = T (ˆ st, ˆat),
+
+where xt ⊕ p denotes the observation frame xt with the patch 
+
+p superimposed. We denote by Ladv ({st}, {ˆst}) a task-level adversarial objective that measures the discrepancy between the clean states {st}Tt=1 and the adversarial states {ˆst}Tt=1 .The optimization problem is therefore 
+
+pfull = arg max  
+
+> p∈P
+
+Ladv 
+
+ {st}Tt=1 , {ˆst}Tt=1 
+
+. (1) This setting represents the strongest adversary with full observability. However, it presumes that the attacker can optimize p with knowledge of the entire trajectory, which is WANG et al. : PARTIALLY OBSERVABLE ADVERSARIAL PATCH ATTACKS ON VLA MODELS 3 
+
+> Fig. 2. Overview of the proposed attack framework under partial observability. In Stage 1, we perform attention-based patch localization to identify a compact region for adversarial patch placement. In Stage 2, we perform content-aware patch optimization to alter object grounding and bias actions toward curvature-amplifying directions, leading to task failures.
+
+unrealistic in real-world robotic deployments. It thus serves mainly as a theoretical upper bound that motivates more practical alternatives. 
+
+C. Partially Observable Patch Attack Setting 
+
+To better capture practical deployments, we introduce a partially observable setting. Here the adversary can only observe a prefix of the trajectory, i.e., the first K ≪ T frames with their state-action tuples {(xt, a t, s t)}Kt=1 . Based on this limited information, the adversary must design a single static patch p ∈ P , which is then fixed and applied to all subsequent frames t = K + 1 , . . . , T .
+
+a) Patch learning from the prefix: The patch is optimized by maximizing an adversarial objective defined on the observ-able prefix: 
+
+p∗ = arg max  
+
+> p∈P
+
+Ladv 
+
+ {st}Kt=1 , {ˆst}Kt=1 
+
+ , (2) where {st}Kt=1 are the clean states and {ˆst}Kt=1 are the adversarial states produced by patched prefix observations. Although optimization is performed only on the prefix, the learned patch is intended to generalize and degrade the unseen future trajectory. 
+
+b) Evaluation on the unseen future: Once p∗ is fixed, it is applied to all subsequent frames t = K + 1 , . . . , T . This produces adversarial actions 
+
+{ˆat}Tt=K+1 = {f (xt ⊕ p∗, l )}Tt=K+1 ,
+
+and the corresponding state rollout 
+
+ˆsK = sK , ˆst+1 = T (ˆ st, ˆat), t = K + 1 , . . . , T. 
+
+The attack effectiveness is then evaluated on the unseen suffix as 
+
+Esuffix (p∗) = Ladv 
+
+ {st}Tt=K+1 , {ˆst}Tt=K+1 
+
+ , (3) where higher values indicate stronger adversarial degradation on the unseen suffix trajectory. IV. M ETHODOLOGY 
+
+To realize adversarial patch attacks under the partially observable setting, we propose a two-phase framework: (i) 
+
+attention-based patch localization , which identifies a compact and influential region, and (ii) content-aware patch opti-mization , which disrupts semantic grounding and trajectory smoothness. Please refer to Fig. 2 for demonstration. 
+
+A. Attention-Based Patch Localization 
+
+To determine an effective patch location, we leverage cross-modal attention from the VLA model. Following the standard ViT backbone [22], each frame is encoded into Nv = h × w
+
+patch tokens arranged on a 2D grid. We compute attention using the last available prefix frame xK , as it provides the most recent visual context before execution. The instruction 
+
+l is tokenized into Z text tokens {wz }Zz=1 , and the model generates a head-summed attention matrix A(K) ∈ RZ×Nv .We define the reshape operator that maps a length-Nv vector back to the h × w token grid: 
+
+Reshape h×w : RNv → Rh×w. (4) We then aggregate across text tokens by taking the element-wise maximum at each grid location. Specifically, the saliency map S ∈ Rh×w is defined as 
+
+S[i, j ] = max 
+
+> 1≤z≤Z
+
+
+
+Reshape h×w(A(K) 
+
+> z, :
+
+)
+
+
+
+[i, j ], (5) for all i = 1 , . . . , h and j = 1 , . . . , w , where [·, ·] denotes the matrix entry. To constrain attacks to a compact contiguous region, we slide an s × s window over S and select the top-left index that maximizes the aggregated score: 
+
+(i⋆, j ⋆) = argmax 
+
+> 1≤i≤h−s+1 1≤j≤w−s+1
+> i+s−1
+
+X
+
+> p=ij+s−1
+
+X
+
+> q=j
+
+S[p, q ]. (6) The window anchored at (i⋆, j ⋆) defines the feasible patch region. We denote by Mpatch ∈ { 0, 1}H×W the binary mask 4 IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED MAY 2026 
+
+at image resolution, obtained by upsampling the selected h×w
+
+token window to the original image size. This mask restricts subsequent optimization updates to the region. 
+
+B. Content-Aware Patch Optimization 
+
+Given the fixed patch location, we optimize its content to maximize adversarial impact. The overall loss Ladv comprises a semantic term that shifts language–vision grounding of target objects and a trajectory term that promotes irregular robot motion, with all updates to p restricted by Mpatch .
+
+a) Semantic grounding disruption: Robotic policies rely on correctly grounding task-relevant nouns in the instruction to corresponding visual regions. If this grounding is shifted, errors can propagate into downstream actions and states. We use attention displacement as an operational proxy for changes in language–vision grounding, rather than a direct causal explanation of the model decision. Let Nalign denote the set of task-relevant nouns extracted from the instruction. Each noun n ∈ Nalign is associated with a token span Sn ⊆ { 1, . . . , Z } corresponding to the subword tokens forming this noun. For each prefix frame index t ∈ { 1, . . . , K }, let ˆA(t) denote the attention matrix corresponding to A(t) when the adversarial patch is applied. We then construct the clean and adversarial grounding maps by reshaping and aggregating these scores: 
+
+M (t) 
+
+> n
+
+[i, j ] = X
+
+> z∈Sn
+
+
+
+Reshape h×w(A(t) 
+
+> z, :
+
+)
+
+
+
+[i, j ],
+
+ˆM (t) 
+
+> n
+
+[i, j ] = X
+
+> z∈Sn
+
+
+
+Reshape h×w( ˆA(t) 
+
+> z, :
+
+)
+
+
+
+[i, j ].
+
+(7) The clean focus (xtn, y tn) and the adversarial focus (ˆ xtn, ˆytn)
+
+are obtained via soft-argmax over M (t) 
+
+> n
+
+and ˆM (t) 
+
+> n
+
+, respectively. The displacement is then measured as 
+
+d2 
+
+> n,t
+
+= (ˆ xtn − xtn)2 + (ˆ ytn − ytn)2, (8) and the semantic loss is defined by 
+
+Lsem (p) = −
+
+> K
+
+X
+
+> t=1
+
+X
+
+> n∈N align
+
+d2
+
+> n,t
+
+, (9) which encourages large shifts in the attention-derived ground-ing focus of target objects across the observed prefix. 
+
+b) Trajectory smoothness disruption: Nominal robot mo-tion commonly follows smoothness preferences, such as low-curvature and low-jerk motion in manipulation and trajectory planning [23], [24]. Motivated by this prior, we use curvature increase as a practical surrogate for inducing irregular motion, rather than as a direct measure of task failure. Our strategy is to identify the direction that amplifies curvature relative to the prefix trajectory and steer the VLA outputs under perturbation toward it. Let {Pt}Kt=1 be the end-effector positions from the prefix (the position component of {st}1: K ). We sample U candidate future directions {du}Uu=1 uniformly on the unit sphere and normalize their length to match the typical step scale. For a horizon Tf , each direction yields a stitched sequence 
+
+P(u)full = {P1, . . . , P K , P K + du, . . . , P K + Tf du}. (10) Since observations are discrete, we fit a cubic spline r(u)(t) = (x(u)(t), y (u)(t), z (u)(t)) through P(u)full to obtain a smooth continuous representation suitable for differential geometry analysis. The curvature of the fitted trajectory is 
+
+κ(u)(t) = ∥r(u)′(t) × r(u)′′ (t)∥∥r(u)′(t)∥3 . (11) Let ¯κhist be the maximum curvature over the prefix spline, and ¯κ(u)full that of the stitched spline. We identify the adversarial target direction as 
+
+u⋆ = arg max 
+
+> 1≤u≤U
+
+
+
+¯κ(u)full − ¯κhist 
+
+
+
+, (12) which corresponds to the sampled direction with the largest curvature increase. Let Dir (t) and ˆDir (t)
+
+denote the action directions predicted by the VLA at prefix frame t under the clean and adversarial settings, respectively. The trajectory loss encourages the ad-versarial directions to align with the selected high-curvature direction du⋆ :
+
+Ltraj (p) = −
+
+> K
+
+X
+
+> t=1
+
+cos 
+
+ ˆDir (t), d u⋆
+
+
+
+. (13) 
+
+c) Unified adversarial objective: The final adversarial objective integrates both components: 
+
+Ladv (p) = λsem Lsem (p) + λtraj Ltraj (p). (14) The patch p is optimized on the prefix data {(xt, a t, s t)}Kt=1 ,with gradient updates restricted by Mpatch .V. E XPERIMENTS 
+
+A. Experimental Setup a) Implementation: We implement the attack in PyTorch and optimize it with SGD using an exponential learning rate from 20.0, decaying by 0.95 per iteration over 50 iterations. The prefix length K defaults to 40 unless noted otherwise. During localization, we select the contiguous token window with the highest saliency on the last prefix frame, with default size s=3 (i.e., 42 × 42 pixels). The loss weights in Eq. (14) are λsem =1 .0 and λtraj =12 .0, and the number of candidate directions is U =100 by default. All experiments run on a workstation with eight H100 GPUs. 
+
+b) Benchmark and Victim VLAs: All evaluations are performed on the LIBERO benchmark [25], which contains four task categories: Spatial, Object, Goal, and Long. Each category includes 10 tasks, and every task is executed for 100 trials, yielding a total of 1,000 rollouts. The maximum rollout horizons are 220, 280, 300, and 520 steps for Spatial, Object, Goal, and Long, respectively. As victim models, we attack four OpenVLA [1] variants, each trained on one suite, and evaluate Hume [26] with official checkpoints fine-tuned on the same suites to test a different architecture. 
+
+c) Baselines: We compare our method with three patch attack methods introduced in [8]: UADA, UPA, and TMA. All baselines use the same prefix length K and number of optimization iterations as ours for fair comparison. WANG et al. : PARTIALLY OBSERVABLE ADVERSARIAL PATCH ATTACKS ON VLA MODELS 5
+
+TABLE I ATTACK SUCCESS RATE (ASR, %) OF UADA, UPA, TMA, AND OURS ON THE LIBERO BENCHMARK ACROSS THE FOUR SUITES (S PATIAL , O BJECT ,GOAL , L ONG ) UNDER PREFIX LENGTHS K ∈ { 10 , 20 , 30 , 40 }.Spatial Object Goal Long K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 UADA 21.1 53.6 57.4 46.1 32.6 35.9 63.8 61.9 28.6 32.4 59.5 59.4 12.0 47.5 54.7 58.5 UPA 35.2 49.3 53.8 48.0 34.2 41.8 59.7 57.9 29.6 37.3 53.0 55.3 37.3 42.7 57.2 59.1 TMA 33.2 51.4 59.1 52.6 31.4 37.7 62.1 61.4 35.3 36.9 54.5 57.7 32.3 45.1 44.4 47.4 Ours 33.4 70.4 73.8 72.4 83.2 86.4 90.7 89.7 47.0 60.2 72.8 71.7 71.0 73.8 86.6 89.1 
+
+TABLE II NORMALIZED ATTACK SUCCESS RATE (NASR, %) OF UADA, UPA, TMA, AND OURS ON THE LIBERO BENCHMARK ACROSS THE FOUR SUITES 
+
+(S PATIAL , O BJECT , G OAL , L ONG ) UNDER PREFIX LENGTHS K ∈ { 10 , 20 , 30 , 40 }.Spatial Object Goal Long K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 K=10 K=20 K=30 K=40 UADA 59.9 73.2 77.7 72.2 63.8 67.0 82.3 80.0 56.0 57.1 74.4 75.8 73.3 82.2 84.9 85.0 UPA 67.4 69.9 74.5 72.2 65.7 69.7 79.1 78.2 55.0 60.4 71.0 69.4 77.4 73.1 81.7 82.3 TMA 65.4 65.2 73.4 74.1 63.0 68.9 80.6 79.7 59.1 59.0 69.3 73.7 74.3 74.6 79.9 81.8 Ours 67.6 86.2 87.5 86.9 92.8 93.7 96.0 95.2 67.2 75.7 79.6 83.9 92.8 92.7 93.9 94.8 
+
+d) Evaluation metrics: We assess attack performance using two metrics:  
+
+> •
+
+ASR (Attack Success Rate): the fraction of episodes that fail under attack according to the LIBERO task-specific success criterion, i.e., one minus the success rate under attack.  
+
+> •
+
+nASR (Normalized Attack Success Rate): a unified score equal to 1 when the attack causes task failure and a proportional value in (0 , 1) when it only induces delay. For rollout r,
+
+nASR( r) = 
+
+
+
+1, task fails ,
+
+max  0, T attack (r) − Tbenign (r)
+
+Tmax (r) + 1 − Tbenign (r) , else .
+
+Here Tbenign (r) is the completion steps of the benign rollout, Tattack (r) the completion steps under attack when the task completes, and Tmax (r) the maximum steps allowed for task r in LIBERO. 
+
+B. Main Results a) Comparison with state-of-the-art methods: Tab. I re-ports ASR on the four LIBERO suites under different prefix lengths. Our method achieves the highest attack success in almost all settings, consistently outperforming all baselines. The advantage is most evident at a moderate prefix (e.g., 
+
+K=30 ), which offers enough context to locate semantically critical regions and optimize an effective patch within the fixed budget. UADA, UPA, and TMA struggle under short prefixes because updates fitted on limited observations cannot capture the evolving scene, with the largest gap on Goal and Long. Tab. II reports nASR, which also credits rollout slowdowns. Our method again performs best in nearly every configuration, delaying even successful rollouts by inducing less efficient trajectories. 
+
+b) Visualization of task executions under adversarial attack: Fig. 3 presents representative executions of Open-VLA on four LIBERO tasks under three settings: benign, attacked by UPA, and attacked by our method, with both attacks optimized at K=30 . When our patch is applied, the 
+
+TABLE III AVERAGE ASR/ NASR (%) FOR PATCH LOCALIZATION STRATEGIES , 
+
+> AVERAGED OVER THE FOUR
+
+LIBERO SUITES . Prefix Mean SELECTS THE PATCH LOCATION USING ATTENTION AVERAGED OVER ALL PREFIX FRAMES , WHILE Last Frame SELECTS IT USING ONLY xK .
+
+K Strategy ASR nASR 10 Prefix Mean 58.0 75.8 Last Frame 58.7 80.1 
+
+30 Prefix Mean 77.7 86.6 Last Frame 81.0 89.3 
+
+policy rapidly deviates from the nominal path and, after brief recovery attempts, is redirected along high-curvature branches. This behavior is consistent with the roles of the two loss terms: Lsem alters noun-related grounding behavior, while 
+
+Ltraj biases motion toward curvature-amplifying directions. Under partial observability these effects cause oscillations, overshoots, and detours that repeatedly trap corrective actions in high-curvature regions and make task completion difficult. In contrast, UPA induces only transient deviations from which the robot typically recovers. Suite-specific patterns are also evident: sharp bends near waypoints in Spatial and Object, failure to stabilize for grasp or placement in Goal, and accumulated deviations with frequent timeouts in Long, consistent with the ASR and nASR trends. 
+
+C. Ablation Studies and Additional Analyses a) Importance of attention-based patch localization: To examine the role of patch localization, we compare attention-based placement with random placement on the LIBERO-Goal suite while keeping all other attack parameters fixed. Fig. 4 shows that attention-based localization consistently improves ASR, confirming the benefit of placing patches in semantically important regions. A broader comparison against stronger localization heuristics is left for future work. We further compare two attention aggregation strategies: the last prefix frame xK versus averaging over all prefix frames. As shown in Tab. III, xK achieves better average ASR/nASR, especially at K=30 , supporting our use of the most recent observation. 6 IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED MAY 2026 
+
+Fig. 3. Snapshots of OpenVLA executions on four LIBERO tasks under different attack settings. The top row shows benign execution, the middle row shows execution attacked by UPA, and the bottom row shows execution with our adversarial patch; both attacks are applied with prefix length K=30 . The rightmost panels depict the 3D gripper trajectories for each setting, with start and goal markers and a purple arrow indicating the high-curvature direction selected by our attack. 
+
+Fig. 4. Attack success rate (ASR, %) of our attack framework with random and attention-based patch location on ten LIBERO–Goal tasks. 
+
+Fig. 5. Effect of loss weights on ASR and nASR. Left: varying λtraj with 
+
+λsem =1 .0; right: varying λsem with λtraj =12 .0.
+
+b) Effect of semantic and trajectory losses: To assess the contribution of the two loss terms, we ablate each com-ponent individually. Tab. IV reports ASR and nASR across LIBERO suites at K=10 and 30 : removing either Lsem or 
+
+Ltraj degrades performance, while the full model achieves the best results across most settings, indicating that both terms contribute. We further examine the loss weights in Eq. (14); as shown in Fig. 5, moderate weights for both terms yield stronger attacks, and the default (λsem , λ traj ) = (1 , 12) 
+
+achieves the best nASR with near-best ASR. 
+
+c) Computational cost: Tab. V reports patch generation time at K=30 on a single NVIDIA H100 GPU. Compared with UADA-style full-rollout optimization, our attack reduces the cost from 351–783 s to 47–53 s across suites, a 6.9 ×–16.7 × speedup. 
+
+TABLE IV ATTACK SUCCESS RATE (ASR, %) AND NORMALIZED ATTACK SUCCESS RATE (NASR, %) OF OUR ATTACK FRAMEWORK ON REPRESENTATIVE TASKS FROM THE FOUR LIBERO SUITES WITH PREFIX LENGTHS 
+
+K ∈ { 10 , 30 }. R ESULTS ARE REPORTED FOR THE FULL MODEL AND VARIANTS WITHOUT THE SEMANTIC LOSS Lsem OR TRAJECTORY LOSS 
+
+Ltraj .Spatial Object Goal Long K=10 K=30 K=10 K=30 K=10 K=30 K=10 K=30 ASR w/o Lsem 29.9 60.8 73.3 78.9 49.2 58.5 37.2 58.5 w/o Ltraj 34.9 63.6 64.2 72.1 33.9 59.4 54.5 73.0 Full 33.4 73.8 83.2 90.7 47.0 72.8 71.0 86.6 
+
+nASR w/o Lsem 67.8 81.3 87.5 89.4 68.5 74.8 84.7 83.6 w/o Ltraj 66.4 82.6 82.7 86.1 58.9 73.5 85.1 90.7 Full 67.6 87.5 92.8 96.0 67.2 79.6 92.8 93.9 
+
+TABLE V PATCH GENERATION TIME (S) AT K=30 ON A SINGLE NVIDIA H100 GPU. Full Rollout DENOTES UADA-STYLE OPTIMIZATION OVER THE COMPLETE TRAJECTORY . L OWER IS BETTER .Method Spatial Object Goal Long Full Rollout 351 413 492 783 Ours 51 48 53 47 
+
+d) Analysis of semantic grounding disruption: We evalu-ate Lsem by visualizing grounding maps for instruction nouns before and after applying our patch at K=30 in Fig. 6. In benign executions, the maps concentrate on the intended referents (e.g., the bowl and the book); after the patch is applied, the peaks shift away toward background regions or areas adjacent to the patch. This provides attention-based evidence that Lsem alters noun-related grounding, consistent with degraded execution. 
+
+e) Analysis of trajectory smoothness disruption: We evaluate the trajectory term by measuring the angular deviation between the action directions predicted under attack and in the benign rollout at the first frame after patch application ( K+1 ), as shown in Fig. 7. Most deviations concentrate in the 30 ◦–
+
+60 ◦ range, indicating a substantial direction change as soon as the patch takes effect. Such deviations steer the end-effector off its nominal path into high-curvature motions, supporting 
+
+Ltraj as a curvature-oriented surrogate for disruptive motion. WANG et al. : PARTIALLY OBSERVABLE ADVERSARIAL PATCH ATTACKS ON VLA MODELS 7
+
+Fig. 6. Visual grounding maps of instruction nouns before and after our adversarial attack on four LIBERO tasks. Each pair shows the benign frame (left) and the attacked frame at prefix length K=30 (right, red border), with colored boxes marking peak grounding responses for the corresponding nouns. 
+
+Fig. 7. Histogram of angular deviations (degrees) at the first frame after patch insertion ( K+1 ) on LIBERO–Long, showing the difference between predicted action directions with and without our adversarial patch. Results are aggregated over all tasks in the Long suite. TABLE VI EFFECT OF CANDIDATE DIRECTION NUMBER U AT K=30 , AVERAGED OVER FOUR LIBERO SUITES .
+
+U 50 75 100 150 200 ASR 44.6 64.8 80.1 79.8 80.7 
+
+nASR 72.1 83.1 89.3 87.7 88.7 TABLE VII SPLINE -CURVATURE STABILITY UNDER SHORT PREFIX LENGTHS WITH 
+
+U =100 , AVERAGED OVER FOUR LIBERO SUITES .
+
+K 10 20 30 Top-5 agreement (%) ↑ 90 .3±1.9 95 .0±1.9 92 .3±2.0
+
+Positive ∆κ rate (%) ↑ 70 .8±4.7 90 .7±2.8 81 .7±3.7
+
+f) Effect of trajectory sampling and curvature estimation: 
+
+The trajectory term samples U candidate future directions to find motions that increase curvature relative to the prefix. In Tab. VI, performance improves substantially from U =50 
+
+to U =100 , while larger values bring only marginal gains at higher cost; we thus use U =100 . Spline-based curvature estimation also stays reliable under short prefixes (Tab. VII): at K=10 , fitting remains valid in all episodes, with high Top-5 agreement and a positive ∆κ rate above 70%. 
+
+g) Effectiveness on the Hume VLA: To verify that the attack is not restricted to OpenVLA, we evaluate it on 
+
+TABLE VIII ATTACK SUCCESS RATE (ASR, %) ON OFFICIAL HUME MODELS [26]  
+
+> TRAINED ON THE FOUR
+
+LIBERO SUITES , WITH PREFIX LENGTHS 
+
+K ∈ { 10 , 30 }. R ESULTS ARE REPORTED FOR THE FULL METHOD AND VARIANTS WITHOUT Lsem OR Ltraj .Spatial Object Goal Long K=10 K=30 K=10 K=30 K=10 K=30 K=10 K=30 Ours w/o Lsem 46.1 67.3 45.4 77.3 54.0 84.2 57.9 68.7 Ours w/o Ltraj 38.7 74.2 48.0 69.5 52.1 78.2 56.6 73.0 Ours 52.2 86.3 56.4 82.2 62.6 83.8 69.0 84.5 
+
+TABLE IX ASR (%) UNDER INPUT PREPROCESSING DEFENSES AT K=30 . JPEG  
+
+> COMPRESSION AND
+
+GAUSSIAN BLUR ARE APPLIED TO EACH PATCHED OBSERVATION BEFORE VLA INFERENCE .Defense Spatial Object Goal Long AVG JPEG ( q=60 ) 70.6 89.1 69.4 87.5 79.2 Gaussian blur ( r=2 ) 74.1 86.2 75.3 85.2 80.2 No Defense 73.8 90.7 72.8 86.6 81.0 
+
+Hume [26]. Using the official models, Tab. VIII reports ASR at 
+
+K=10 and K=30 : the full method performs best across most settings, and removing either loss term reduces performance, confirming effectiveness on another VLA architecture. 
+
+h) Robustness against simple input-level defenses: We evaluate two input-level defenses at K=30 , JPEG compression (q=60 ) and Gaussian blur ( r=2 ). As shown in Tab. IX, the average ASR stays close to the undefended case (79.2/80.2 vs. 81.0), so these simple defenses alone cannot suppress the attack. 
+
+i) Failure-case analysis: Several conditions reduce the attack’s impact. Very short prefixes weaken it: at K=10 the prefix gives limited context for localization and curvature estimation, and ASR drops markedly (e.g., 33.4% on Spatial and 47.0% on Goal in Tab. I). The Spatial suite is also harder to disrupt, as its short, tightly constrained motions let small induced deviations be corrected before completion. On shorter-horizon suites a large prefix leaves only a brief suffix to influence, so larger K does not always help (e.g., the slight ASR drop from K=30 to K=40 ). The attack is thus most effective with a moderate prefix on longer-horizon tasks. 
+
+j) Physical attack evaluation: We evaluate the attack on a ROKAE xMate ER7 Pro arm with a Robotiq 2F-85 gripper, using an overhead Intel RealSense D455 RGB camera and OpenVLA-7B for policy execution. The adversarial patch is physically printed at 18 cm × 18 cm and mounted on a rigid support in the workspace, keeping it approximately front-facing to the camera. The patch is captured as part of the physical scene and affects the VLA through real visual observations. Fig. 8 shows representative attacked executions, where the robot exhibits incorrect object interactions and fails to complete the tasks. We further report quantitative results on two real-world manipulation tasks, each repeated for 50 trials under benign and attacked conditions. As shown in Tab. X, the printed patch reduces success rates from 72% to 12% on Task A and from 58% to 8% on Task B, confirming substantial degradation in physical execution. 8 IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED MAY 2026 
+
+Fig. 8. Snapshots of real-world VLA task executions on a ROKAE xMate ER7 Pro robot. For each task, the top row shows benign execution and the bottom row shows execution with a physically printed adversarial patch mounted front-facing in the workspace. TABLE X QUANTITATIVE PHYSICAL EVALUATION . E ACH TASK IS REPEATED FOR 50 
+
+> TRIALS UNDER BENIGN AND ATTACKED CONDITIONS
+
+. V ALUES REPORT TASK SUCCESS RATE (%). T ASK A: PUT THE RANCH BOTTLE INTO THE POT . T ASK B: MOVE THE TIGER FROM THE RED BOWL TO THE GRAY BOWL .Condition Task A Task B Benign 72 58 Attacked 12 8
+
+VI. C ONCLUSION 
+
+In this paper, we have presented a framework for adversarial patch attacks on VLA-based robots under partial observability. Even when only a limited prefix of the trajectory is available, exploiting vulnerabilities in perception and control can induce persistent disruptions. Extensive experiments in simulation and the real world show that our method causes long-horizon fail-ures and significantly reduces task success rates, underscoring the risks of adversarial threats to VLA models and motivating systematic evaluation and robustness enhancement for VLA-based robotic systems. 
+
+Limitations and Future Work. Our partially observable set-ting is weaker than full-rollout optimization, but still assumes partial-access gray-box information and a short execution prefix. The method relies on cross-modal attention or similar grounding signals, as well as prefix trajectory information, and therefore does not cover fully black-box policies. Extending the attack to weaker-access settings and broader VLA archi-tectures remains an important direction for future work. REFERENCES [1] M. J. Kim, K. Pertsch, S. Karamcheti, T. Xiao, A. Balakrishna, S. Nair, R. Rafailov, E. Foster, G. Lam, P. Sanketi, et al. , “Openvla: An open-source vision-language-action model,” in CoRL , 2024. [2] K. Black, N. Brown, D. Driess, A. Esmail, M. Equi, C. Finn, N. Fusai, L. Groom, K. Hausman, B. Ichter, et al. , “ π0: A vision-language-action flow model for general robot control,” in RSS , 2025. [3] J. Bjorck, F. Casta˜ neda, N. Cherniadev, X. Da, R. Ding, L. Fan, Y. Fang, D. Fox, F. Hu, S. Huang, et al. , “Gr00t n1: An open foundation model for generalist humanoid robots,” arXiv preprint arXiv:2503.14734 , 2025. [4] X. Shi, D. Li, P. Zhao, Q. Tian, Y. Tian, Q. Long, C. Zhu, J. Song, F. Qiao, L. Song, et al. , “Are we ready for service robots? the openloris-scene datasets for lifelong slam,” in ICRA , 2020, pp. 3139–3145. [5] K. R. Guerin, C. Lea, C. Paxton, and G. D. Hager, “A framework for end-user instruction of a robot assistant for manufacturing,” in ICRA ,2015, pp. 6167–6174. [6] C. Szegedy, W. Zaremba, I. Sutskever, J. Bruna, D. Erhan, I. Goodfellow, and R. Fergus, “Intriguing properties of neural networks,” in ICLR , 2014. [7] I. J. Goodfellow, J. Shlens, and C. Szegedy, “Explaining and harnessing adversarial examples,” in ICLR , 2015. [8] T. Wang, C. Han, J. C. Liang, W. Yang, D. Liu, L. X. Zhang, Q. Wang, J. Luo, and R. Tang, “Exploring the adversarial vulnerabilities of vision-language-action models in robotics,” in ICCV , 2025. [9] J.-P. A. Yaacoub, H. N. Noura, O. Salman, and A. Chehab, “Robotics cyber security: Vulnerabilities, attacks, countermeasures, and recommen-dations,” International Journal of Information Security , vol. 21, no. 1, pp. 115–158, 2022. [10] ´A. M. Guerrero-Higueras, N. DeCastro-Garc´ ıa, and V. Matell´ an, “De-tection of cyber-attacks to indoor real time localization systems for autonomous robots,” Robotics and Autonomous Systems , vol. 99, pp. 75–83, 2018. [11] B. Dieber, B. Breiling, S. Taurer, S. Kacianka, S. Rass, and P. Schartner, “Security for the robot operating system,” Robotics and Autonomous Systems , vol. 98, pp. 192–203, 2017. [12] G. Mazzeo and M. Staffa, “Tros: Protecting humanoids ros from privileged attackers,” International Journal of Social Robotics , vol. 12, no. 3, pp. 827–841, 2020. [13] W. Wu, F. Pierazzi, Y. Du, and M. Brand˜ ao, “Characterizing physical adversarial attacks on robot motion planners,” in ICRA , 2024, pp. 14 319–14 325. [14] N. W. Alharthi and M. Brand˜ ao, “Physical and digital adversarial attacks on grasp quality networks,” in ICRA , 2024, pp. 1907–1912. [15] D. Wang, D. Tseng, P. Li, Y. Jiang, M. Guo, M. Danielczuk, J. Mahler, J. Ichnowski, and K. Goldberg, “Adversarial grasp objects,” in CASE ,2019, pp. 241–248. [16] X. Wang, M. Han, T. Hao, C. Li, Y. Zhao, and K. Tang, “Advgrasp: Adversarial attacks on robotic grasping from a physical perspective,” in 
+
+IJCAI , 2025, pp. 547–555. [17] B. Chen, W. Wang, P. Sikorski, and T. Zhu, “Adversary is on the road: Attacks on visual SLAM using unnoticeable adversarial patch,” in USENIX Security , 2024, pp. 6345–6362. [18] E. K. Jones, A. Robey, A. Zou, Z. Ravichandran, G. J. Pappas, H. Hassani, M. Fredrikson, and J. Z. Kolter, “Adversarial attacks on robotic vision language action models,” in RSS Workshop , 2025. [19] H. Zhang, C. Zhu, X. Wang, Z. Zhou, C. Yin, M. Li, L. Xue, Y. Wang, S. Hu, A. Liu, et al. , “Badrobot: Jailbreaking embodied llm agents in the physical world,” in ICLR , 2025. [20] S. Liu, J. Chen, S. Ruan, H. Su, and Z. Yin, “Exploring the robustness of decision-level through adversarial attacks on llm-based embodied models,” in ACM MM , 2024, pp. 8120–8128. [21] X. Zhou, G. Tie, G. Zhang, H. Wang, P. Zhou, and L. Sun, “Badvla: To-wards backdoor attacks on vision-language-action models via objective-decoupled optimization,” in NeurIPS , 2025. [22] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, et al. ,“An image is worth 16x16 words: Transformers for image recognition at scale,” in ICLR , 2021. [23] T. Flash and N. Hogan, “The coordination of arm movements: An exper-imentally confirmed mathematical model,” The Journal of Neuroscience ,vol. 5, no. 7, pp. 1688–1703, 1985. [24] A. Gasparetto and V. Zanotto, “A technique for time-jerk optimal planning of robot trajectories,” Robotics and Computer-Integrated Man-ufacturing , vol. 24, no. 3, pp. 415–426, 2008. [25] B. Liu, Y. Zhu, C. Gao, Y. Feng, Q. Liu, Y. Zhu, and P. Stone, “Libero: Benchmarking knowledge transfer for lifelong robot learning,” NeurIPS ,vol. 36, pp. 44 776–44 791, 2023. [26] H. Song, D. Qu, Y. Yao, Q. Chen, X. Ye, Q. Lv, X. Gao, G. Ren, M. Yao, B. Zhao, D. Wang, and X. Li, “Hume: Introducing system-2 thinking in visual-language-action model,” in CVPR , 2026.

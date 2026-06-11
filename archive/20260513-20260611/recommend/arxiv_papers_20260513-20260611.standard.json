@@ -1,16 +1,462 @@
 {
   "mode": "standard",
-  "generated_at": "2026-06-11T09:19:14.841542+00:00",
+  "generated_at": "2026-06-11T11:23:47.437660+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
-    "deep_divecandidates": 0,
+    "deep_divecandidates": 7,
     "deep_cap": 6,
-    "deep_selected": 0,
-    "quick_candidates": 0,
+    "deep_selected": 6,
+    "quick_candidates": 5,
     "quick_skim_target": 11,
-    "quick_selected": 0
+    "quick_selected": 5
   },
-  "deep_dive": [],
-  "quick_skim": []
+  "deep_dive": [
+    {
+      "id": "2605.21541v1",
+      "source": "arxiv",
+      "title": "Frequency-Domain Regularized Adversarial Alignment for Transferable Attacks against Closed-Source MLLMs",
+      "abstract": "Multimodal large language models (MLLMs) remain vulnerable to transfer-based targeted attacks, where perturbations optimized on open-source surrogate encoders can generalize to closed-source MLLMs. A key challenge for improving adversarial transferability is to effectively capture the intrinsic visual focus shared across different models, such that perturbations align with transferable semantic cues rather than surrogate-specific behaviors. However, existing methods suffer from spatial-domain feature redundancy and surrogate-specific gradient signals, thereby hindering cross-model transferability. In this paper, we propose FRA-Attack, which addresses both challenges from a unified frequency-domain regularization perspective. For feature alignment, a high-pass DCT objective on patch features suppresses redundant global structures and concentrates the loss on the high-frequency band that carries the MLLMs' intrinsic visual focus. For gradient optimization, we introduce Frequency-domain Gradient Regularization (FGR), a \\textit{model-agnostic} low-pass regularizer that modulates the surrogate gradient using only the geometric frequency coordinate, \\textit{i.e.}, no surrogate-derived statistic is involved, so that FGR is model-agnostic by construction, removing surrogate-specific high-frequency artifacts while preserving transferable low-frequency directions. Together, the two components form a unified frequency-domain treatment of transferability. Extensive experiments on $15$ flagship MLLMs across $7$ vendors show that FRA-Attack achieves superior cross-model transferability, particularly with state-of-the-art performance on GPT-5.4, Claude-Opus-4.6 and Gemini-3-flash.",
+      "authors": [
+        "Leitao Yuan",
+        "Qinghua Mao",
+        "Daizong Liu",
+        "Kun Wang",
+        "Wenjie Wang",
+        "Yan Teng",
+        "Jing Shao",
+        "Dongrui Liu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-05-20T08:15:56+00:00",
+      "link": "https://arxiv.org/pdf/2605.21541v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "proposes FRA-Attack, a transferable adversarial attack on MLLMs using frequency-domain regularization to align with semantic cues",
+      "llm_evidence_cn": "提出频域正则化对抗对齐攻击，针对闭源多模态大模型的迁移攻击",
+      "llm_evidence": "提出频域正则化对抗对齐攻击，针对闭源多模态大模型的迁移攻击",
+      "canonical_evidence": "提出频域正则化对抗对齐攻击，针对闭源多模态大模型的迁移攻击",
+      "llm_tldr_en": "Proposes FRA-Attack, a frequency-domain regularized adversarial alignment method for transferable attacks against closed-source MLLMs, capturing intrinsic visual focus and semantic cues to enhance cross-model transferability.",
+      "llm_tldr_cn": "多模态大模型易受迁移攻击，但现有方法受空间冗余和代理特定梯度影响，跨模型迁移性差。本文提出FRA-Attack，从频域正则化视角统一解决两个挑战，通过捕捉内在视觉焦点和可迁移语义线索增强对抗扰动迁移性，在闭源MLLM上实现了高效定向攻击。",
+      "llm_tldr": "多模态大模型易受迁移攻击，但现有方法受空间冗余和代理特定梯度影响，跨模型迁移性差。本文提出FRA-Attack，从频域正则化视角统一解决两个挑战，通过捕捉内在视觉焦点和可迁移语义线索增强对抗扰动迁移性，在闭源MLLM上实现了高效定向攻击。",
+      "llm_tags": [
+        "query:vlm-adv-eval:composite"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval:composite",
+      "matched_query_text": "Papers central to 搜索2024-2026年针对视觉语言模型（VLM、VLP、LVLM、MLLM）的对抗攻击或鲁棒性评估论文，优先考虑以人类可解释方式操纵或生成视觉输入的方法，如语义概念、对象、属性、关系、场景、光照、风格、背景、局部区域或细粒度视觉内容。排斥基于OCR文本、印刷提示、隐藏指令、隐写术、代码截图、纯文本越狱、综述、基准测试和纯防御方法。, especially work that connects or combines: adversarial attacks on vision-language models; adversarial attack targeting visual inputs of VLMs; semantic visual perturbation for misleading multimodal models; human-interpretable semantic manipulation of images for adversarial attacks; fine-grained visual manipulation attacks on VLMs; Find adversarial attacks that manipulate visual scenes in a semantically meaningful way to mislead vision language models.; Explore robustness evaluation methods for multimodal models against human interpretable visual perturbations.; Search for attacks on VLMs that alter objects, attributes, or relationships to cause incorrect captions or visual reasoning errors..",
+      "matched_requirement_id": "req-composite-vlm-adv-eval",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.26501v1",
+      "source": "arxiv",
+      "title": "Unveiling the Fragility of Vision-Language Models: Multi-Modal Adversarial Synergy via Texture-Constrained Perturbations and Cross-Modal Optimization",
+      "abstract": "Large Vision-Language Models (LVLMs) have transformed multi-modal understanding, excelling in tasks like image captioning and visual question answering by integrating visual and textual inputs. However, their robustness against adversarial attacks, particularly those exploiting both modalities, remains underexplored, posing risks to critical applications like autonomous driving and content moderation. Existing attacks focus on single modalities or require impractical white-box access, limiting their real-world relevance. In this paper, we introduce Multi-Modal Adversarial Synergy, a groundbreaking framework that crafts universal, black-box multi-modal attacks against LVLMs. MMAS simultaneously generates a texture scale-constrained universal adversarial perturbation for images and a learnable prompt perturbation for text, optimized jointly using only model queries. The image perturbation leverages wavelet-based texture constraints to ensure imperceptibility and robustness across diverse visual inputs. The text perturbation, constrained by an L-norm in the embedding space, maintains semantic coherence while steering outputs toward a target. A novel cross-modal regularization term aligns the perturbations' gradient directions, enhancing their synergistic impact and transferability across tasks and models. Extensive experiments show the strong universal adversarial capabilities of our proposed attack with prevalent LVLMs.",
+      "authors": [
+        "Xiang Fang",
+        "Wanlong Fang",
+        "Changshuo Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-05-26T03:28:28+00:00",
+      "link": "https://arxiv.org/pdf/2605.26501v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Introduces multi-modal adversarial attacks against Large Vision-Language Models",
+      "llm_evidence_cn": "提出针对大视觉语言模型的多模态对抗攻击",
+      "llm_evidence": "提出针对大视觉语言模型的多模态对抗攻击",
+      "canonical_evidence": "提出针对大视觉语言模型的多模态对抗攻击",
+      "llm_tldr_en": "Introduces Multi-Modal Adversarial Synergy, a universal black-box attack framework against LVLMs that uses texture-constrained perturbations and cross-modal optimization to exploit both visual and textual vulnerabilities.",
+      "llm_tldr_cn": "现有针对大视觉语言模型的对抗攻击多局限于单模态或需要白盒访问，实用性有限。本文提出多模态对抗协同框架，通过纹理约束扰动和跨模态优化生成通用黑盒攻击，同时破坏视觉和文本处理。实验表明该方法能有效误导图像描述和视觉问答等任务，揭示了LVLM的多模态脆弱性，为防御研究提供新视角。",
+      "llm_tldr": "现有针对大视觉语言模型的对抗攻击多局限于单模态或需要白盒访问，实用性有限。本文提出多模态对抗协同框架，通过纹理约束扰动和跨模态优化生成通用黑盒攻击，同时破坏视觉和文本处理。实验表明该方法能有效误导图像描述和视觉问答等任务，揭示了LVLM的多模态脆弱性，为防御研究提供新视角。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.03556v1",
+      "source": "arxiv",
+      "title": "Partially Observable Adversarial Patch Attacks on Vision-Language-Action Models in Robotics",
+      "abstract": "Vision-language-action (VLA) models are gaining attention in robotics, yet their robustness to adversarial attacks remains largely unexplored. Existing work shows that adversarial patches can mislead VLA-based robots but assumes full access to the entire execution trajectory, an unrealistic requirement in practice. We address this limitation by formulating a partially observable threat model, where the adversary can exploit only a short prefix of the trajectory to generate a fixed patch applied to all subsequent frames. Under this setting, we propose a two-phase framework. First, we localize the patch using the model's attention maps to identify visually critical regions that correspond to the full instruction. Then, we optimize the patch to disrupt the semantic grounding of target objects and increase the curvature of action trajectories, thereby compounding failures in both perception and control. Extensive experiments in simulation and real-world robotic environments show that our method sustains adversarial effects under partial observability, inducing long-horizon disruptions and significantly reducing task success rates.",
+      "authors": [
+        "Xiaofei Wang",
+        "Mingliang Han",
+        "Tianyu Hao",
+        "Yi Yang",
+        "Yun-Bo Zhao",
+        "Keke Tang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-06-02T12:19:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.03556v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proposes adversarial patch attack on Vision-Language-Action models, targeting visual inputs to mislead action predictions.",
+      "llm_evidence_cn": "提出针对视觉-语言-动作模型的对抗补丁攻击，通过视觉输入误导行动预测。",
+      "llm_evidence": "提出针对视觉-语言-动作模型的对抗补丁攻击，通过视觉输入误导行动预测。",
+      "canonical_evidence": "提出针对视觉-语言-动作模型的对抗补丁攻击，通过视觉输入误导行动预测。",
+      "llm_tldr_en": "Formulates partially observable adversarial patch attacks on VLA models, using attention to localize critical regions and optimizing patches to mislead the model.",
+      "llm_tldr_cn": "视觉-语言-动作模型在机器人领域潜力巨大，但其对抗鲁棒性尚未充分探索。本研究针对实际中仅能观测部分轨迹的限制，提出两阶段对抗补丁攻击：首先利用模型注意力图定位与指令相关的视觉关键区域，然后优化固定补丁施加于所有后续帧。在OpenVLA-7B上实验表明，该攻击显著降低任务成功率，揭示了VLA模型的严重安全漏洞，为机器人鲁棒性研究提供了新的威胁模型。",
+      "llm_tldr": "视觉-语言-动作模型在机器人领域潜力巨大，但其对抗鲁棒性尚未充分探索。本研究针对实际中仅能观测部分轨迹的限制，提出两阶段对抗补丁攻击：首先利用模型注意力图定位与指令相关的视觉关键区域，然后优化固定补丁施加于所有后续帧。在OpenVLA-7B上实验表明，该攻击显著降低任务成功率，揭示了VLA模型的严重安全漏洞，为机器人鲁棒性研究提供了新的威胁模型。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.08894v1",
+      "source": "arxiv",
+      "title": "Are Reasoning Vision-Language Models Robust to Semantic Visual Distractions?",
+      "abstract": "Reasoning Vision-Language Models (VLMs) achieve strong performance on complex multimodal tasks, but reliable real-world application requires handling visual inputs that are messier than clean, curated benchmarks. Existing works mainly evaluate such reliability of VLMs through input corruptions, such as noise, blur and weather effects, which make visual evidence harder to perceive. This leaves a critical reliability failure mode underexplored: a model may perceive the evidence correctly, yet reason from plausible but irrelevant and distracting evidence and propagate this mistake to its final answer. To address this gap, we introduce \\textbf{Distract-Bench}, a benchmark for evaluating VLM robustness to \\textbf{semantic visual distractions}, defined as meaningful but task-irrelevant visual cues added to inputs while preserving the ground-truth answer. We comprehensively evaluate eight leading open-source and two closed-source VLMs across conventional vision corruptions and Distract-Bench. Our results show that Distract-Bench exposes a robustness failure distinct from vision corruptions: reasoning VLMs largely track their non-reasoning base models under perceptual degradation, but show consistently lower robustness to semantic distractions. Further analysis shows that these distractions often enter the reasoning process of VLMs, are treated as evidence, and lead to incorrect answers. Together, these findings reframe robustness evaluation for reasoning VLMs, shifting the focus from degraded perception to distractions for reliable real-world visual reasoning. Our data and code are available at https://github.com/Yizheng-Sun/Distract-Bench.",
+      "authors": [
+        "Yizheng Sun",
+        "Mochuan Zhan",
+        "Yanan Ma",
+        "Jia Tong See",
+        "Yifan Wang",
+        "Ziyi Wang",
+        "Hao Li",
+        "Yang Cui",
+        "Wenhao Cai",
+        "Jingyu Sun",
+        "Chenghua Lin",
+        "Riza Batista-Navarro",
+        "Jingyuan Sun"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.CL"
+      ],
+      "published": "2026-06-08T00:40:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.08894v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Evaluates VLM robustness to semantic visual distractions via Distract-Bench",
+      "llm_evidence_cn": "通过Distract-Bench评估VLM对语义视觉干扰的鲁棒性",
+      "llm_evidence": "通过Distract-Bench评估VLM对语义视觉干扰的鲁棒性",
+      "canonical_evidence": "通过Distract-Bench评估VLM对语义视觉干扰的鲁棒性",
+      "llm_tldr_en": "Introduces Distract-Bench, a benchmark to evaluate the robustness of reasoning VLMs against semantic visual distractions, which are plausible but irrelevant visual elements that mislead reasoning without impairing perception.",
+      "llm_tldr_cn": "现有VLM鲁棒性评估主要关注低层噪声，忽略了语义视觉干扰这一关键失败模式。本文提出Distract-Bench基准，通过添加语义相关但无关的视觉元素来测试模型推理鲁棒性。结果表明VLMs在语义干扰下易产生错误推理，凸显了多模态模型对高层视觉扰动的脆弱性，推动鲁棒性评估方法发展。",
+      "llm_tldr": "现有VLM鲁棒性评估主要关注低层噪声，忽略了语义视觉干扰这一关键失败模式。本文提出Distract-Bench基准，通过添加语义相关但无关的视觉元素来测试模型推理鲁棒性。结果表明VLMs在语义干扰下易产生错误推理，凸显了多模态模型对高层视觉扰动的脆弱性，推动鲁棒性评估方法发展。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "Explore robustness evaluation methods for multimodal models against human interpretable visual perturbations.",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.17826v1",
+      "source": "arxiv",
+      "title": "CounterCount: A Diagnostic Framework for Counting Bias in Vision Language Models",
+      "abstract": "Vision-Language Models (VLMs) excel at multimodal reasoning, yet it remains unclear whether their answers are grounded in visual evidence or driven by learned language and world priors. Counting provides a precise testbed: when visual evidence conflicts with canonical object knowledge, a model must rely on the image rather than a prototypical count. We introduce CounterCount, a diagnostic framework for counterfactual counting in VLMs, consisting of paired factual and counterfactual images with edited count-relevant attributes, verified answers, and localized evidence annotations. Evaluating recent VLMs, we find strong performance on factual images but consistent degradation under counterfactual attribute changes, indicating reliance on object-level priors even when contradictory visual evidence is present. Using localized annotations, we show that these failures are not solely due to missing or ambiguous visual evidence, but to models underweighting attention to count-relevant visual tokens. We introduce a unified inference-time attention modulation strategy that reweights selected visual tokens, improving counterfactual counting accuracy by up to 8% across multiple VLMs. Overall, CounterCount exposes prior-driven counting failures and provides diagnostic insights for designing future VLMs.",
+      "authors": [
+        "Reem Alzahrani",
+        "Hassan Alshanqiti",
+        "Bushra Bin Hemid",
+        "Zaid Alyafeai",
+        "Abdelrahman Eldesokey",
+        "Bernard Ghanem"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-05-18T04:00:05+00:00",
+      "link": "https://arxiv.org/pdf/2605.17826v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diagnostic framework creates counterfactual images with edited count attributes to evaluate VLM robustness",
+      "llm_evidence_cn": "诊断框架通过编辑计数属性创建反事实图像，评估VLM鲁棒性",
+      "llm_evidence": "诊断框架通过编辑计数属性创建反事实图像，评估VLM鲁棒性",
+      "canonical_evidence": "诊断框架通过编辑计数属性创建反事实图像，评估VLM鲁棒性",
+      "llm_tldr_en": "CounterCount introduces a diagnostic framework with counterfactual images that edit count-relevant attributes to test vision-language models' reliance on visual evidence vs. language priors. It reveals performance degradation under attribute changes, highlighting models' counting bias.",
+      "llm_tldr_cn": "CounterCount诊断框架通过编辑计数相关属性生成反事实图像，以检测视觉语言模型是否依赖视觉证据还是语言先验。实验发现，在属性改变后模型性能显著下降，揭示了模型倾向于依赖原型对象的计数偏见。该框架为评估VLM的视觉基础能力提供了可解释的视觉扰动方法，有助于理解多模态模型的鲁棒性。",
+      "llm_tldr": "CounterCount诊断框架通过编辑计数相关属性生成反事实图像，以检测视觉语言模型是否依赖视觉证据还是语言先验。实验发现，在属性改变后模型性能显著下降，揭示了模型倾向于依赖原型对象的计数偏见。该框架为评估VLM的视觉基础能力提供了可解释的视觉扰动方法，有助于理解多模态模型的鲁棒性。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "Explore robustness evaluation methods for multimodal models against human interpretable visual perturbations.",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28083v1",
+      "source": "arxiv",
+      "title": "VLA-Hijack: A Transferable Patch Attack against Vision-Language-Action Models via Visual Proprioception Hijacking",
+      "abstract": "While Vision-Language-Action (VLA) models have emerged as powerful generalist policies, their severe vulnerability to adversarial patches significantly hinders their deployment in safety-critical domains. Moreover, existing patch attacks primarily focus on white-box settings, heavily overfitting to the specific action output space of the target model, which results in poor cross-architecture transferability. To overcome this limitation, we propose VLA-Hijack, a unified adversarial framework that breaks the transferability bottleneck by exploiting a fundamental vulnerability identified in this work: before planning any motion, a VLA model must first use visual information to locate its own robotic arm within the environment. Targeting this shared visual self-localization process, our approach concurrently optimizes Attention-Guided Proprioceptive Suppression to inhibit the real robotic arm's features, and Multimodal Proprioceptive Injection to establish the patch as a surrogate \"phantom embodiment\". By alternating between semantic concept anchoring and visual prototype projection, VLA-Hijack effectively severs the semantic relationship between the agent's true embodiment and its control policy. Extensive experiments across diverse architectures (OpenVLA, UniVLA, and CronusVLA) demonstrate that VLA-Hijack achieves superior optimization efficiency in white-box settings and sets a new SOTA for cross-architecture and cross-domain black-box transferability.",
+      "authors": [
+        "Jiyuan Fu",
+        "Kaixun Jiang",
+        "Jingkai Jia",
+        "Zhaoyu Chen",
+        "Xueyao Chen",
+        "Lingyi Hong",
+        "Shuyong Gao",
+        "Chenzhi Tan",
+        "Dingkang Yang",
+        "Wenqiang Zhang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-05-27T07:38:16+00:00",
+      "link": "https://arxiv.org/pdf/2605.28083v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Presents transferable patch attack against Vision-Language-Action models",
+      "llm_evidence_cn": "提出针对视觉语言动作模型的可迁移补丁攻击",
+      "llm_evidence": "提出针对视觉语言动作模型的可迁移补丁攻击",
+      "canonical_evidence": "提出针对视觉语言动作模型的可迁移补丁攻击",
+      "llm_tldr_en": "Proposes VLA-Hijack, a transferable adversarial patch attack against Vision-Language-Action models that improves cross-architecture transferability by hijacking visual proprioception for robotic arm localization.",
+      "llm_tldr_cn": "视觉语言动作模型易受补丁攻击，但现有攻击可迁移性差。本文提出VLA-Hijack框架，利用模型定位机械臂的视觉本体感受设计可迁移补丁攻击。实验表明该方法在跨架构下实现高攻击成功率，为安全关键应用提供风险评估工具。",
+      "llm_tldr": "视觉语言动作模型易受补丁攻击，但现有攻击可迁移性差。本文提出VLA-Hijack框架，利用模型定位机械臂的视觉本体感受设计可迁移补丁攻击。实验表明该方法在跨架构下实现高攻击成功率，为安全关键应用提供风险评估工具。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.28609v1",
+      "source": "arxiv",
+      "title": "JECA^2: Judgment-Explanation Consistent Adversarial Attack against Forensic Vision-Language Models",
+      "abstract": "Forensic vision-language models (VLMs) have recently been developed to detect image tampering and provide natural-language explanations. However, their robustness against adversarial manipulation remains underexplored. Existing adversarial attacks typically aim to flip the model's binary judgment, while the accompanying explanation may still reveal forensic cues and contradict the attacked judgment. In this paper, we study judgment-explanation consistent adversarial attacks against forensic VLMs and propose JECA^2, a controlled white-box red-team diagnostic that jointly redirects visual attribution and aligns textual explanations with the target judgment. On the visual side, JECA^2 uses Grad-CAM-guided perturbations to divert attribution from tampered regions toward benign regions. On the textual side, it optimizes prompt embeddings toward authenticity-affirming semantics under a token-proximity constraint. Experiments on forensic VLM benchmarks show that JECA^2 achieves higher attack success and automated judgment-explanation consistency than implemented baselines under white-box threat settings, while transfer to closed-source VLMs remains measurable but limited. Our results highlight a consistency failure mode in explanation-based forensic VLMs and motivate future robustness evaluation beyond binary detection accuracy.",
+      "authors": [
+        "Jiachen Qian"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-05-27T15:24:31+00:00",
+      "link": "https://arxiv.org/pdf/2605.28609v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Grad-CAM-guided perturbations attack forensic VLMs to flip judgment and explanation",
+      "llm_evidence_cn": "利用Grad-CAM引导的扰动攻击法医视觉语言模型以翻转判断和解释",
+      "llm_evidence": "利用Grad-CAM引导的扰动攻击法医视觉语言模型以翻转判断和解释",
+      "canonical_evidence": "利用Grad-CAM引导的扰动攻击法医视觉语言模型以翻转判断和解释",
+      "llm_tldr_en": "Proposes JECA^2, a white-box adversarial attack on forensic VLMs that uses Grad-CAM-guided perturbations to simultaneously flip the tampering judgment and align the textual explanation with the target, ensuring consistency between the attacked output and explanation.",
+      "llm_tldr_cn": "JECA^2是一种针对法医视觉语言模型的白盒对抗攻击方法，通过Grad-CAM引导的视觉扰动，同时翻转篡改判断并使文本解释与攻击目标对齐。该方法解决了现有攻击仅改变判断而解释仍暴露伪造线索的不一致问题，在诊断法医VLM脆弱性方面提供了可控的红队工具。实验表明，JECA^2能有效实现判断与解释的一致性攻击。",
+      "llm_tldr": "JECA^2是一种针对法医视觉语言模型的白盒对抗攻击方法，通过Grad-CAM引导的视觉扰动，同时翻转篡改判断并使文本解释与攻击目标对齐。该方法解决了现有攻击仅改变判断而解释仍暴露伪造线索的不一致问题，在诊断法医VLM脆弱性方面提供了可控的红队工具。实验表明，JECA^2能有效实现判断与解释的一致性攻击。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.17310v1",
+      "source": "arxiv",
+      "title": "Attention Hijacking: Response Manipulation Across Queries in Vision-Language Models",
+      "abstract": "Existing adversarial attacks on vision-language models (VLMs) can steer model outputs toward attacker-specified target responses, but their effectiveness often degrades when the same perturbed input is paired with different textual queries. This paper studies cross-query response manipulation, where a single adversarial example is expected to remain effective across diverse user queries. We first analyze the limitations of existing attacks and find that successful transfer is closely associated with preserving an image-dominant attention pattern during response generation. Motivated by the observation, we propose \\textbf{Attention Hijacking}, a novel adversarial attack that explicitly steers internal attention distributions toward a persistent image-dominant pattern. By amplifying the influence of visual tokens on target response tokens while suppressing the competing influence of textual tokens, our method reduces the dependence of the manipulated output on the specific wording of the query. Extensive experiments on widely used VLMs show that Attention Hijacking substantially improves cross-query transferability across diverse target responses and unseen queries. The method also extends effectively to multiple attack scenarios, offering new insights into the role of attention stability in transferable response manipulation for VLMs.",
+      "authors": [
+        "Zhiqiang Wang",
+        "Dongrui Liu",
+        "Yan Li",
+        "Zonghao Ying",
+        "Wei Xue",
+        "Wenhan Luo",
+        "Yike Guo"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-05-17T08:02:27+00:00",
+      "link": "https://arxiv.org/pdf/2605.17310v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Attention Hijacking attack steers attention to manipulate VLM responses across queries",
+      "llm_evidence_cn": "注意力劫持攻击引导注意力分布以跨查询操纵VLM响应",
+      "llm_evidence": "注意力劫持攻击引导注意力分布以跨查询操纵VLM响应",
+      "canonical_evidence": "注意力劫持攻击引导注意力分布以跨查询操纵VLM响应",
+      "llm_tldr_en": "This paper proposes Attention Hijacking, an adversarial attack that manipulates VLM internal attention patterns to achieve cross-query response manipulation with a single perturbed image.",
+      "llm_tldr_cn": "针对现有VLM对抗攻击在不同查询下效果下降的问题，本文提出了注意力劫持攻击。通过分析发现，成功的跨查询控制与保持图像主导的注意力模式密切相关，由此设计方法显式引导内部注意力分布朝向持久的图像偏好状态。实验表明该攻击能在多种查询下稳定操纵模型输出，揭示了VLM注意力机制的安全隐患。",
+      "llm_tldr": "针对现有VLM对抗攻击在不同查询下效果下降的问题，本文提出了注意力劫持攻击。通过分析发现，成功的跨查询控制与保持图像主导的注意力模式密切相关，由此设计方法显式引导内部注意力分布朝向持久的图像偏好状态。实验表明该攻击能在多种查询下稳定操纵模型输出，揭示了VLM注意力机制的安全隐患。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.16651v1",
+      "source": "arxiv",
+      "title": "Right Predictions, Misleading Explanations: On the Vulnerability of Vision-Language Model Explanations",
+      "abstract": "Explanation mechanisms are increasingly used to support transparency and trust in vision-language models (VLMs), particularly in settings where model decisions require human oversight. However, the robustness of these explanations remains insufficiently understood. In this work, we investigate whether explanation heatmaps in VLMs, particularly CLIP-based models, faithfully reflect model reasoning under adversarial conditions. We show that explanation maps can be systematically manipulated while preserving the model's original prediction, revealing a disconnect between predictive behavior and explanation faithfulness. To study this vulnerability, we introduce X-Shift, a novel grey-box attack that perturbs patch-level visual representations to redirect explanation heatmaps toward semantically irrelevant regions without altering the predicted output. Unlike conventional adversarial attacks that aim to induce misclassification, X-Shift specifically targets the integrity of the explanation process itself. The attack operates without modifying model parameters and generalizes across multiple CLIP architectures and explanation methods. We evaluate the proposed approach on ImageNet-1k, MS-COCO, and Flickr30K, demonstrating consistent degradation in explanation alignment under imperceptible perturbations while maintaining prediction stability. Furthermore, standard prediction-oriented adversarial attacks fail to reproduce the same explanation-shifting behavior even under substantially larger perturbation budgets. Our findings highlight a fundamental limitation of current explanation mechanisms in VLMs and raise concerns about their use as reliable indicators of model trustworthiness in high-impact applications.",
+      "authors": [
+        "Narges Babadi",
+        "Hadis Karimipour"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-05-15T21:44:16+00:00",
+      "link": "https://arxiv.org/pdf/2605.16651v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "X-Shift attack manipulates VLM explanation heatmaps by perturbing visual patches",
+      "llm_evidence_cn": "X-Shift攻击通过扰动视觉块操纵VLM解释热图",
+      "llm_evidence": "X-Shift攻击通过扰动视觉块操纵VLM解释热图",
+      "canonical_evidence": "X-Shift攻击通过扰动视觉块操纵VLM解释热图",
+      "llm_tldr_en": "This paper investigates adversarial vulnerability of VLM explanations, proposing X-Shift attack that perturbs patch-level visual features to mislead heatmaps while preserving predictions.",
+      "llm_tldr_cn": "针对VLM解释机制在对抗条件下的鲁棒性研究不足的问题，本文提出了X-Shift攻击。通过灰色盒方式扰动视觉块级特征，可在保持模型原始预测不变的情况下系统性地操纵解释热图，揭示了模型预测行为与解释忠实性之间的脱节。实验表明现有VLM的解释易被误导，对可信赖AI构成威胁。",
+      "llm_tldr": "针对VLM解释机制在对抗条件下的鲁棒性研究不足的问题，本文提出了X-Shift攻击。通过灰色盒方式扰动视觉块级特征，可在保持模型原始预测不变的情况下系统性地操纵解释热图，揭示了模型预测行为与解释忠实性之间的脱节。实验表明现有VLM的解释易被误导，对可信赖AI构成威胁。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.10571v1",
+      "source": "arxiv",
+      "title": "Improving Adversarial Transferability on Vision-Language Pre-training Models via Surrogate-Specific Bias Correction",
+      "abstract": "Adversarial examples reveal vulnerabilities in Vision-Language Pre-training (VLP) models and provide insights for improving robustness. A key property is cross-model transferability, which enables transfer-based black-box attacks. However, existing attacks often rely heavily on the surrogate model, causing cross-model performance drops. One reason is that adversarial optimization may follow surrogate model responses more than input semantics, making the update direction effective on the surrogate but less transferable to unseen targets. We refer to this dependency as surrogate-specific bias. Motivated by this observation, DeBias-Attack improves transferability by correcting surrogate-specific bias in adversarial optimization directions. It maintains two perturbation branches. The main branch optimizes a perturbation on the original image and obtains the adversarial gradient used to disrupt image-text alignment. The reference branch optimizes a perturbation on a weak-semantic image constructed from the dataset mean image with small Gaussian noise resampled at each iteration. Since this weak-semantic image contains little clear visual content, its optimization reflects surrogate responses more than image semantics, and its reference gradient estimates surrogate-specific bias. DeBias-Attack removes the aligned projection of the main gradient on the reference gradient before updating the adversarial image, then performs context-aware text substitution using the updated adversarial image. DeBias-Attack is the first transfer-based VLP attack that corrects surrogate-specific bias through gradient correction. Experiments show strong performance across VLP models, downstream tasks, and open-source and closed-source multimodal large language models.",
+      "authors": [
+        "Lijia Yu",
+        "Jiuxin Cao",
+        "Yuchen Qiang",
+        "Changhao Chen",
+        "Yifei Huang",
+        "Bo Liu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-06-09T08:34:01+00:00",
+      "link": "https://arxiv.org/pdf/2606.10571v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Debias-Attack corrects surrogate-specific bias to improve transferability on VLP models",
+      "llm_evidence_cn": "Debias-Attack纠正替代模型特有偏差以提升VLP模型上的对抗迁移性",
+      "llm_evidence": "Debias-Attack纠正替代模型特有偏差以提升VLP模型上的对抗迁移性",
+      "canonical_evidence": "Debias-Attack纠正替代模型特有偏差以提升VLP模型上的对抗迁移性",
+      "llm_tldr_en": "This paper proposes DeBias-Attack to improve adversarial transferability by correcting surrogate-specific bias, enhancing black-box attack effectiveness on VLP models.",
+      "llm_tldr_cn": "针对现有视觉语言预训练模型对抗攻击因过度依赖替代模型导致跨模型迁移性下降的问题，本文提出DeBias-Attack方法。通过纠正对抗优化中的替代模型特有偏差，使更新方向更贴近输入语义而非模型响应，从而提升对抗样本对未知目标模型的迁移性。实验表明该方法能有效提高黑盒攻击的成功率，为增强VLP模型鲁棒性评估提供了新工具。",
+      "llm_tldr": "针对现有视觉语言预训练模型对抗攻击因过度依赖替代模型导致跨模型迁移性下降的问题，本文提出DeBias-Attack方法。通过纠正对抗优化中的替代模型特有偏差，使更新方向更贴近输入语义而非模型响应，从而提升对抗样本对未知目标模型的迁移性。实验表明该方法能有效提高黑盒攻击的成功率，为增强VLP模型鲁棒性评估提供了新工具。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attacks on vision-language models",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.03793v1",
+      "source": "arxiv",
+      "title": "Exploring Adversarial Robustness and Safety Alignment in Multilingual Multi-Modal Large Language Models",
+      "abstract": "Multimodal Large Language Models integrate visual perception into language reasoning, introducing a continuous attack surface susceptible to adversarial attacks. Prior work on MLLM robustness has focused largely on English-centric tasks, leaving multilingual behaviour unexplored. We address this gap through a systematic study of adversarial robustness and multimodal safety across 12 diverse languages, evaluating open-source MLLMs that acquire multilingual capability through instruction tuning. Gradient-based attacks reveal a transferable multilingual vulnerability: adversarial images optimized in one language continue to induce failure in others, demonstrating strong cross-lingual transferability. Multilingual safety further varies with how effectively a model retrieves or interprets harmful instructions. When harmful intent is issued through text, languages with stronger linguistic grounding more often elicit misuse-enabling responses, while weaker languages produce fewer unsafe outputs. When embedded in the image as typographic content, English scripts are reliably recognised and followed, whereas non-English scripts are rarely parsed by the vision encoder. Lower-resource languages may therefore appear safer, but this is an artefact of comprehension and visual-grounding failures rather than genuine alignment, a phenomenon we term safety-by-failure. In contrast, MLLMs that build multilingual capability throughout their training stages rather than only at instruction tuning, such as Qwen3-VL, exhibit genuine cross-lingual safety, maintaining active refusal across languages rather than masking comprehension failure. Shallow multilingual adaptation, such as fine-tuning on translated instruction data, may produce surface-level understanding that creates illusory safety in low-resource languages; deeper integration across training stages leads to genuine multilingual safety alignment.",
+      "authors": [
+        "Hashmat Shadab Malik",
+        "Muzammal Naseer",
+        "Salman Khan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.CV"
+      ],
+      "published": "2026-06-02T15:42:10+00:00",
+      "link": "https://arxiv.org/pdf/2606.03793v1",
+      "tags": [
+        "keyword:vlm-adv-eval",
+        "query:vlm-adv-eval"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "gradient-based attacks reveal transferable multilingual vulnerability on MLLMs",
+      "llm_evidence_cn": "基于梯度的攻击揭示多语言多模态大模型的可迁移对抗脆弱性",
+      "llm_evidence": "基于梯度的攻击揭示多语言多模态大模型的可迁移对抗脆弱性",
+      "canonical_evidence": "基于梯度的攻击揭示多语言多模态大模型的可迁移对抗脆弱性",
+      "llm_tldr_en": "This paper studies adversarial robustness of multilingual MLLMs, showing gradient-based attacks produce adversarial images that transfer across languages, highlighting consistent vulnerabilities.",
+      "llm_tldr_cn": "针对多模态大模型在多语言场景下的对抗鲁棒性研究较少的问题，本文系统评估了12种语言的对抗鲁棒性与安全对齐。通过基于梯度的攻击方法，发现针对一种语言优化的对抗图像可有效迁移到其他语言，展现出跨语言的可迁移脆弱性。实验表明多语言指令微调后的开源MLLMs存在一致且广泛的对抗攻击面，为多模态安全研究提供了新的视角。",
+      "llm_tldr": "针对多模态大模型在多语言场景下的对抗鲁棒性研究较少的问题，本文系统评估了12种语言的对抗鲁棒性与安全对齐。通过基于梯度的攻击方法，发现针对一种语言优化的对抗图像可有效迁移到其他语言，展现出跨语言的可迁移脆弱性。实验表明多语言指令微调后的开源MLLMs存在一致且广泛的对抗攻击面，为多模态安全研究提供了新的视角。",
+      "llm_tags": [
+        "query:vlm-adv-eval"
+      ],
+      "matched_query_tag": "query:vlm-adv-eval",
+      "matched_query_text": "adversarial attack targeting visual inputs of VLMs",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
 }

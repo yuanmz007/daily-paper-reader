@@ -1,0 +1,838 @@
+Title: Frequency-Domain Regularized Adversarial Alignment for Transferable Attacks against Closed-Source MLLMs
+
+URL Source: https://arxiv.org/pdf/2605.21541v1
+
+Published Time: Fri, 22 May 2026 00:04:33 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# Frequency-Domain Regularized Adversarial Alignment for Transferable Attacks against Closed-Source MLLMs 
+
+Leitao Yuan 1,2 ∗ Qinghua Mao 1,3 ∗ Daizong Liu 4† Kun Wang 5 Wenjie Wang 6
+
+Yan Teng 1 Jing Shao 1 Dongrui Liu 1†
+
+> 1
+
+Shanghai Artificial Intelligence Laboratory 2Zhejiang University 
+
+> 3
+
+Shanghai Jiao Tong University 4Wuhan University 
+
+> 5
+
+Nanyang Technological University 6University of Science and Technology of China 
+
+Abstract 
+
+Multimodal large language models (MLLMs) remain vulnerable to transfer-based targeted attacks, where perturbations optimized on open-source surrogate encoders can generalize to closed-source MLLMs. A key challenge for improving adversar-ial transferability is to effectively capture the intrinsic visual focus shared across different models, such that perturbations align with transferable semantic cues rather than surrogate-specific behaviors. However, existing methods suffer from spatial-domain feature redundancy and surrogate-specific gradient signals, thereby hindering cross-model transferability. In this paper, we propose FRA-Attack, which addresses both challenges from a unified frequency-domain regularization perspec-tive. For feature alignment, a high-pass DCT objective on patch features suppresses redundant global structures and concentrates the loss on the high-frequency band that carries the MLLMs’ intrinsic visual focus. For gradient optimization, we introduce Frequency-domain Gradient Regularization (FGR), a model-agnostic 
+
+low-pass regularizer that modulates the surrogate gradient using only the geometric frequency coordinate, i.e. , no surrogate-derived statistic is involved, so that FGR is model-agnostic by construction, removing surrogate-specific high-frequency artifacts while preserving transferable low-frequency directions. Together, the two components form a unified frequency-domain treatment of transferability. Exten-sive experiments on 15 flagship MLLMs across 7 vendors show that FRA-Attack achieves superior cross-model transferability, particularly with state-of-the-art performance on GPT-5.4, Claude-Opus-4.6 and Gemini-3-flash. 
+
+1 Introduction 
+
+Multimodal large language models (MLLMs) [ 26 , 4, 20 , 6] have achieved remarkable performance across a wide range of multimodal tasks, including image captioning, visual question answering (VQA), and visual reasoning. Despite their success, recent studies [ 28 , 9] have revealed that the vision encoders of MLLMs remain highly vulnerable to adversarial attacks [ 11 ], where carefully crafted perturbations can mislead model predictions while remaining imperceptible to humans. In practice, attacks against closed-source MLLMs are typically conducted under a transfer-based black-box setting, where attackers have no access to model parameters. To this end, prior works [ 46 , 7 , 16 , 24 , 21 , 45 ] propose optimizing adversarial examples by aligning visual features between source and target images, including both global representations and fine-grained patch-level semantics, on surrogate models, achieving strong transferability to closed-source MLLMs.  
+
+> ∗Equal contribution. Work done during an internship at Shanghai Artificial Intelligence Laboratory.
+> †Correspondence to: Daizong Liu <daizongliu@whu.edu.cn>, Dongrui Liu <liudongrui@pjlab.org.cn>. Preprint.
+> arXiv:2605.21541v1 [cs.CR] 20 May 2026 (a) Loss-side: align where it matters. (b) Gradient-side: filter what to follow.
+
+Figure 1: Two orthogonal frequency-domain levers for transferable VLM attacks. (a) Loss-side DCT alignment localizes the transferable visual focus. (b) Gradient-side FGR consensus 
+
+suppresses model-specific gradient noise and stabilizes the update direction. During the perception of clean and adversarial visual patterns, modern MLLMs generally rely on attention-based visual encoders [ 30 , 26 , 4 ] that aggregate patch tokens into structured semantic representations, where visual content is selectively attended and integrated across layers [ 27 , 39 ]. This attention-driven process determines the model’s intrinsic visual focus by emphasizing semantically meaningful regions and suppressing irrelevant details. First , for adversarial examples to transfer across MLLMs, the perturbations must align with the MLLMs’ intrinsic visual focus, such that the induced changes consistently affect how models perceive and interpret visual content. This suggests that transferable attacks must ultimately target the intrinsic visual focus shared across models. Second ,beyond defining the alignment target, transferability further requires the iterative update itself to follow a model-agnostic direction: even when the loss is aligned with the intrinsic visual focus, surrogate gradients carry directions carved out by the surrogate’s own decision boundary that any other encoder would not endorse [ 7, 41 ]. Therefore, a transferable attack must satisfy these two coupled conditions, locking the alignment target onto the intrinsic visual focus while keeping each gradient step on a direction shared across MLLMs. However, existing approaches fall short on both transferable conditions above: (1) Their general spatial-domain visual feature alignment operates on highly redundant and entangled patch representa-tions [ 34 , 33 , 27 , 39 ], which emphasize overlapping global structures and inject noisy optimization signals, making it difficult to isolate the intrinsic visual focus on the target image. (2) Besides, during iterative optimization, surrogate gradients carry model-specific directions that do not correspond to the intrinsic visual focus shared across MLLMs [ 41 , 44 , 31 ], causing adversarial perturbations to overfit to the surrogate and degrade cross-model transferability. These two challenges indicate that improving adversarial transferability requires a unified representation that can simultaneously localize the MLLMs’ intrinsic visual focus on the alignment side and supply a model-agnostic prior on the gradient side. From this perspective, we revisit both sides using spectrum tools, where different frequency bands provide a natural decomposition of the underlying signal: (1) On the alignment side, frequency-domain feature representations separate redundant global structures from semantically meaningful variations, exposing the band that concentrates the intrinsic visual focus. (2) On the gradient side, the frequency coordinate of the gradient itself supplies a purely geometric prior that is independent of any surrogate-derived statistic, separating model-agnostic directions from surrogate-specific artifacts. The same frequency decomposition therefore offers a principled foundation for addressing both conditions of cross-model adversarial transferability. Based on the above observations, this work proposes FRA-Attack, a transferable targeted adversarial attack paradigm that improves cross-model transferability by jointly enforcing the two conditions identified above: locking the alignment target onto the intrinsic visual focus shared across MLLMs, and constraining each gradient step to a model-agnostic direction. Rather than directly optimizing surrogate-specific representations or following raw surrogate gradients, FRA-Attack reformulates both sides in a frequency-aware space, where a single frequency decomposition provides a principled tool for addressing both conditions. In particular, FRA-Attack introduces frequency-aware feature alignment on the loss side and frequency-domain gradient regularization on the optimization side, jointly guiding perturbations toward semantically meaningful and transferable directions. 2For feature alignment, FRA-Attack moves beyond spatial-domain representations and instead captures visual semantics through a frequency-based decomposition. Spatial patch features are transformed via a Discrete Cosine Transform (DCT) [ 1], where high-frequency components emphasize semantically meaningful variations while suppressing redundant global structures, encouraging perturbations to focus on the intrinsic visual focus consistently attended to across models. For gradient optimization, FRA-Attack further introduces a model-agnostic frequency-domain regularization strategy to improve transferability. Instead of directly following surrogate gradients, the gradient is reinterpreted in the frequency domain and selectively modulated according to its transferability: high-frequency components that encode surrogate-specific artifacts are suppressed, while low-frequency components that capture the intrinsic visual focus shared across MLLMs are preserved. This formulation steers adversarial optimization toward directions aligned with the intrinsic visual focus of MLLMs, thereby reducing surrogate overfitting and improving cross-model transferability. Our main contributions are summarized as follows: • We propose FRA-Attack, a transfer-based targeted adversarial attack on MLLMs that treats both the characteristics of adversarial transferability of alignment target and the optimization step in the frequency domain. FRA-Attack addresses two distinct spatial-domain failure modes: redundant patch features on the alignment side, and surrogate-specific noise on the gradient side. • We propose a frequency-domain alignment mechanism that effectively captures the intrinsic visual focus shared across MLLMs, thereby dispelling the spatial-domain redundancy in which the local features merely duplicate the global structures. • We propose Frequency-domain Gradient Regularization (FGR), a model-agnostic gradient regular-ization strategy that exploits only the geometric frequency coordinate and no surrogate-derived statistic, so that transferable directions are preserved by construction while surrogate-specific noise is removed. • We evaluate FRA-Attack on 15 MLLMs across 7 vendors (OpenAI, Anthropic, Google, Meta, Moonshot, Zhipu, Alibaba) and three open-source vision encoder families (CLIP, AIMv2, SigLIP). FRA-Attack consistently outperforms the strongest prior method across vendors and encoder families, with the largest absolute gain observed on the Anthropic family. 
+
+2 Method 
+
+2.1 Problem Formulation 
+
+Given a source image xs and a target image xt, we aim to generate an adversarial image xadv that is visually indistinguishable from xs yet induces a victim MLLM to produce descriptions semantically aligned with the target image xt. Following [ 24 , 21 ], we employ an ensemble of J pre-trained vision encoders {fj }Jj=1 (e.g. , CLIP variants) as surrogate models and formulate the attack as a constrained optimization problem: 
+
+min 
+
+> xadv
+> J
+
+X
+
+> j=1
+
+Wj · L j (fj (xadv ), f j (xt)) , s.t. ∥xadv − xs∥∞ ≤ ϵ, (1) where Wj is a per-model weight set adaptively across iterations (Section 2.3) and ϵ is the perturbation budget. For each encoder fj , a ViT backbone produces a global feature gj ∈ Rdj (the [CLS] token) and a set of patch embeddings Ej ∈ RPj ×dj , where Pj is the number of patches and dj is the embedding dimension of fj .
+
+Victim Models. We consider black-box MLLMs ( e.g. , GPT, Gemini, Claude) as victim models. The adversary has no access to their architectures, parameters, or intermediate representations, and can only query them via APIs to obtain textual responses. Following prior work [ 46 , 21 ], we adopt a transfer-based setting, where adversarial perturbations are optimized on open-source surrogate encoders and transferred to the victim models. 
+
+Adversary Goals. The adversary aims to generate an adversarial example xadv that remains visually similar to the source image xs, while inducing the victim MLLM to produce outputs semantically aligned with the target image xt. The attack is considered successful if the generated response reflects the target semantics rather than the original content. 32.2 Preliminary Analysis 
+
+The dominant recipe for transfer-based attacks [ 24 , 45 , 21 ] aligns spatial-domain local features on a surrogate ensemble and optimizes the perturbation along the raw surrogate gradient. Building on the two transferability conditions identified in the introduction, we now formalize where this recipe breaks down on each side: on the alignment side, prior local objectives reduce to the same low-frequency content as the global term and never localize the intrinsic visual focus; on the gradient side, the surrogate-specific component of the input gradient concentrates in a particular frequency band that current remedies do not address. 
+
+Limitation 1: Spatial-domain local features do not localize the intrinsic visual focus. The intrinsic visual focus lives on a small set of discriminative tokens, yet spatial patch features fail to isolate this set. The multi-scale [CLS] cropping family [ 24 , 45 ] aligns the global token across patch sub-regions, but since neighboring ViT patches are highly correlated [ 27 , 39 ], each per-crop [CLS] 
+
+reduces to a low-frequency aggregate that duplicates rather than complements the global term. The patch-clustering family [ 21 ] aligns cluster centers {ck}, which are weighted averages of correlated tokens and inherit the same low-frequency content, with limited capacity for the high-frequency details that carry subject identity. As Fig. 1 shows, spatial-domain energy spreads across background patches while a token-wise frequency decomposition concentrates it on the semantic object. Fine-grained alignment, the very purpose of introducing a local term, is therefore weakened by spatial redundancy, and the intrinsic visual focus is never explicitly targeted. 
+
+Limitation 2: Surrogate-specific gradient noise persists without a model-agnostic decomposition. 
+
+Even with a well-chosen alignment target, the surrogate gradient mixes a transferable cross-model component with a surrogate-specific one; prior analysis [ 27 ] localizes the latter predominantly in the high-frequency band of the input gradient spectrum. Existing remedies [ 7 , 41 , 44 , 31 ] dilute this noise indirectly through input augmentation or model averaging without decomposing the gradient itself, so the surrogate-specific component persists across iterations and is repeatedly accumulated under sign-based updates. What is missing is a principled prior that identifies which gradient components to filter without referring to any surrogate-derived statistic. The two limitations act on different tensors—patch embeddings and input gradients—and therefore admit two complementary frequency-domain treatments, presented in Section 2.3. 
+
+2.3 Frequency-domain Regularized Alignment Attack (FRA-Attack) 
+
+We propose FRA-Attack, a targeted adversarial attack paradigm that improves transferability by treating the two limitations of Section 2.2 on their respective tensors. The pipeline is illustrated in Fig. 2 and consists of two components. The first component (Section 2.4) replaces the spatial-domain local objective with an optimal transport over high-frequency DCT components of the patch embeddings, locking the alignment onto the intrinsic visual focus rather than the low-frequency content already covered by the global [CLS] term. The second component (Section 2.5) replaces the raw input gradient with a radially low-pass-filtered version before each sign step, suppressing the surrogate-specific noise that accumulates under iterative optimization. The two components act on different tensors—patch embeddings and input gradients—and therefore combine without interference. We slot them into the standard transfer-attack pipeline of [ 21 ]: the per-model loss Lj in Eq. (1) is the sum of a global [CLS] cosine term and the high-frequency OT term Lf req j of Section 2.4; the ensemble weights Wj follow the per-step adaptive scheme of [ 21 ]; and the FGR-regularized gradient drives an MI-FGSM update. The full equations and the integrated algorithm are deferred to Algorithm 1 (Appendix C.1). 
+
+2.4 Frequency-Aware Visual Intrinsic Perception for Explicit Perturbation 
+
+We construct the local alignment term on the high-frequency DCT components of the patch em-beddings, where the intrinsic visual focus identified in Section 2.2 resides. Concretely, we apply a token-wise DCT to the patch embeddings, isolate the top-energy components in the high-frequency band as a proxy for the intrinsic visual focus, and align them between the source and target images via optimal transport. 
+
+Perceiving Visual Focus of Patches using Spectrum Tools. Given the patch embeddings of vision encoder E = [ e0, e1, . . . , eP −1]⊤ ∈ RP ×d, we apply the Type-II DCT along the token-wise 4Figure 2: Overall pipeline of FRA-Attack. Given a source image xs and a target xt, we update the perturbation by (i) aligning DCT high-frequency components of patch embeddings via optimal transport and (ii) regularizing input gradients with a radial low-pass filter. dimension to transform spatial-domain features into frequency-domain coefficients: 
+
+Fk = 
+
+> P−1
+
+X
+
+> n=0
+
+en cos 
+
+h πP
+
+ n + 12
+
+ k
+
+i
+
+, k = 0 , 1, . . . , P − 1, (2) where Fk ∈ Rd is the k-th frequency component. Low-frequency components ( k ≈ 0) capture global structure shared across patches, while high-frequency components ( k ≫ 0) encode spatially distinct fine-grained semantics such as textures, edges, and local patterns; we give a formal derivation in Appendix J.1. The DCT representation has two properties that make it suitable for iterative adversarial optimization. First, it concentrates the signal energy into a small number of frequency components, yielding a compact representation, as visualized in the right panel of Fig. 1. Second, the decomposition is 
+
+deterministic and orthogonal , yielding a stable and reproducible representation: identical inputs induce identical frequency coefficients, in contrast to K-means cluster centers that are sensitive to initialization and may drift across iterations. 
+
+Frequency-Domain Feature Alignment. Following the local-alignment recipe of prior transfer-based attacks [ 24 , 21 ], we align a small set of source and target features, but draw them from the high-frequency DCT band rather than from spatial cluster centers. Concretely, we define a frequency threshold θ that separates the low- and high-frequency bands of the DCT spectrum, and select the top-n most energetic components from the high-frequency band: 
+
+εk = ∥Fk∥2, k = 0 , . . . , P −1, (3) 
+
+I = Top -n {εk}P −1
+
+> k=θ
+
+ , (4) where Top -n( ·) returns the indices of the n largest values. The selected high-frequency features are: 
+
+L = [ Fi1 , Fi2 , . . . , Fin ]⊤ ∈ Rn×d, {i1, . . . , i n} = I. (5) Given the high-frequency features L(s), L(t) ∈ Rn×d from the adversarial and target images, we align them using an entropic optimal transport formulation. The cost matrix Cab is defined as the cosine distance between ℓ2-normalized features, with uniform marginals 1 
+
+> n
+
+1n. The resulting alignment loss is: 
+
+Lf req = X
+
+> a,b
+
+Cab π∗
+
+> ab
+
+, (6) where π∗ is the Sinkhorn transport plan with entropic regularization parameter λ.52.5 Model-Agnostic Gradient Regularization for Adversarial Transferability 
+
+We construct the low-frequency selector on input gradients, realizing the second component outlined in Section 2.3. The goal is to remove surrogate-specific noise from the input gradient before each sign update, rather than augmenting the input pixels as in prior spectrum-based attacks [7]. We propose Frequency-domain Gradient Regularization (FGR), a model-agnostic mechanism that operates directly on the input gradient. FGR maps the gradient ∇ ∈ RB×C×H×W to the spatial frequency domain via a 2D Type-II DCT, applies a frequency-dependent attenuation based on the radial distance from the DC component, and transforms the result back with the inverse DCT. The radial distance is defined as 
+
+d(u, v ) = 
+
+√u2 + v2
+
+√H2 + W 2 ∈ [0 , 1] , (7) where d = 0 corresponds to the DC component and d = 1 to the highest frequency. The regularized gradient is 
+
+˜∇ = IDCT 2D (ϕ(d) · DCT 2D (∇)) , ϕ(d) = (1 − d)p, (8) where ϕ preserves low-frequency components and attenuates higher-frequency ones. The regularized gradient ˜∇ replaces ∇ in any first-order adversarial update (e.g., FGSM, MI-FGSM, PGD), without requiring access to surrogate-internal representations. 
+
+3 Experiments 
+
+3.1 Experimental Setup Setup. We use 1,000 source–target image pairs (NIPS 2017 sources resized to 224 × 224 ,MSCOCO [ 25 ] validation targets), reused across all methods and victims. The surrogate is a three-CLIP [ 30 ] ensemble of ViT-B/16, ViT-B/32, and ViT-g-14-laion2B. The victim panel cov-ers 15 MLLMs in three groups — closed-source standard, closed-source thinking (reasoning-augmented variants), and open-source models from six vendors. We compare against four weak baselines [46, 16, 7, 43] on the first 100 pairs (marked †) and three strong baselines: M-Attack [24], FOA-Attack [ 21 ], and M-Attack-V2 [ 45 ]. To keep consistent with the standard image-to-image attack setting, we run M-Attack-V2 with target-side retrieval disabled (it otherwise pulls in an external MSCOCO pool to enlarge each target into an image-to-images set); full details in Appendix C.3. All attacks share perturbation budget ϵ = 16 /255 (ℓ∞) and N = 300 MI-FGSM iterations. Full victim names, hyperparameters, API endpoints, and hardware are reported in Appendix C.3. 
+
+Metrics. Following the LLM-as-a-judge protocol of M-Attack [ 24 ], the same victim captions both the adversarial and the target images, and a GPT-4o judge measures their similarity. We report 
+
+ASR (fraction with similarity > 0.5), AvgSim (mean similarity), and a complementary KMR at three strictness levels α < β < γ .
+
+3.2 Main Results 
+
+Across 1,000 source–target pairs, FRA-Attack consistently achieves the strongest performance on all evaluated closed-source MLLMs (Tables 1–2). Compared with the strongest prior baseline, M-Attack-V2 [ 45 ], the improvement is particularly notable on the Anthropic family, with ASR improvement of 12 .3% on Claude-Opus-4.6 and 10 .0% on Claude-Sonnet-4.6. FRA-Attack also generalizes well across heterogeneous open-source vision encoders, ranking first on 5 of 6 open-source victims spanning CLIP-style, AIMv2, and SigLIP/SigLIP-2 encoder families (Table 3). 
+
+Strong transferability on commercial closed-source MLLMs. FRA-Attack consistently improves over previous transfer-based attacks across all closed-source victims. The improvement is most pro-nounced on the Anthropic models, while more moderate but still consistent gains are observed on OpenAI and Gemini models. Although the internal visual architectures of these systems are not publicly available, the results suggest that the proposed frequency-domain alignment better captures visual cues that remain stable across different MLLMs. In particular, DCT-based feature align-ment encourages perturbations to focus on semantically meaningful regions, while FGR suppresses surrogate-specific optimization noise, together leading to more transferable adversarial directions. 6Table 1: Performance of ASR (%) and AvgSim on different closed-source MLLMs.                                                                                                                      
+
+> Method GPT-5.2 GPT-5.4 Claude-Opus-4.6 Claude-Sonnet-4.6 Gemini-3-flash Gemini-2.5-flash ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 1.0 0.060 0.0 0.044 0.0 0.032 0.0 0.038 0.0 0.025 0.0 0.033 AdvDiffVLM †[16] 1.0 0.047 0.0 0.036 0.0 0.035 1.0 0.043 0.0 0.054 1.0 0.046 SSA-CWA †[7] 0.0 0.049 0.0 0.033 0.0 0.022 0.0 0.022 0.0 0.028 0.0 0.029 AnyAttack †[43] 1.0 0.053 0.0 0.057 0.0 0.039 1.0 0.039 0.0 0.038 0.0 0.043 M-Attack [24] 24.0 0.272 23.4 0.268 49.2 0.433 42.1 0.402 26.8 0.310 42.9 0.407 FOA-Attack [21] 30.9 0.312 27.3 0.300 51.3 0.455 49.2 0.444 30.9 0.341 47.5 0.439 M-Attack-V2 [45] 41.2 0.383 37.9 0.369 64.5 0.536 62.9 0.532 47.5 0.437 65.9 0.544
+> FRA-Attack (Ours) 46.9 0.427 44.5 0.411 76.8 0.613 72.9 0.595 50.8 0.456 67.4 0.545
+
+Table 2: Performance of ASR (%) and AvgSim on different closed-source thinking MLLMs.                                 
+
+> Method GPT-5.4-thinking Claude-Opus-4.6-thinking Gemini-3-flash-thinking ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 23.0 0.264 45.6 0.414 26.8 0.306 FOA-Attack [21] 27.7 0.302 51.1 0.453 34.7 0.348 M-Attack-V2 [45] 38.8 0.377 66.7 0.547 45.4 0.426
+> FRA-Attack (Ours) 46.1 0.416 74.0 0.614 51.0 0.456
+
+Reasoning-enhanced MLLMs remain vulnerable. The advantage of FRA-Attack persists on all thinking-enabled variants in Table 2, where the performance gap over M-Attack-V2 remains consistently large. Interestingly, enabling chain-of-thought reasoning only marginally changes the ASR for all methods. This observation suggests that the attack primarily affects the visual perception stage before reasoning is performed, such that additional reasoning computation cannot recover from corrupted visual evidence. 
+
+Transferability across heterogeneous visual encoders. FRA-Attack also transfers effectively across diverse open-source encoder families, including CLIP-style, AIMv2, and SigLIP/SigLIP-2 based MLLMs. The improvement over M-Attack-V2 remains consistent across most models, indicat-ing that the proposed frequency-domain formulation is not tied to a specific encoder architecture. We attribute this robustness to the complementary roles of the two components: frequency-domain align-ment encourages perturbations to target intrinsic visual focus shared across attention-based encoders, while FGR reduces surrogate-specific high-frequency artifacts that otherwise limit cross-architecture transferability. The only exception is Gemma-3-27B-it, where all methods exhibit relatively low ASR. We discuss this behavior further in Appendix ?? .
+
+3.3 Ablation Study 
+
+Table 4 decomposes FRA-Attack into its two main components. Overall, both DCT alignment and FGR contribute consistently to the final performance, and combining them yields the strongest transferability across all evaluated victims. We further analyze several design choices, including the FGR decay function (Figure 3), optimizer selection (Table 6), perturbation budget sensitivity (Figure 4), and the effect of removing the surrogate ensemble (Table 5). Additional hyperparameter studies are provided in Appendix D. 
+
+DCT alignment and FGR provide complementary gains. Both components consistently improve transferability over M-Attack-V2, and combining them yields the strongest overall performance. DCT alignment improves semantic consistency by focusing perturbations on compact frequency-domain cues, while FGR stabilizes optimization by suppressing surrogate-specific gradient artifacts. The largest gains are again observed on the Anthropic models, where either component alone already recovers most of the final improvement. In contrast, Gemini-3-flash benefits primarily from DCT alignment, while adding FGR provides only marginal additional gain, suggesting a weaker mismatch between surrogate gradients and Gemini’s visual pipeline. Table 6: ASR (%) across closed-source models with different optimizer.                  
+
+> Optimizer GPT-5.4 Claude-Opus-4.6 Gemini-3-flash Mean ASR
+> FGSM (no momentum) 33.0 56.0 25.0 38.0
+> MI-FGSM (μ=1 .0)43.0 82.0 55.0 60.0
+> PGD-Adam 45.0 74.0 51.0 56.7
+
+Smooth frequency-domain regularization is important for transferability. Figure 3 com-pares several variants of FGR and shows that continuous radial decay consistently outper-forms hard thresholding or statistical clipping. In practice, preserving the relative structure of 7Table 3: Performance of ASR (%) and AvgSim on different open-source MLLMs.                                                                                                                      
+
+> Method Qwen3-VL-8B Qwen3-VL-32B GLM-4.6V Llama-3.2-11B-V Gemma-3-27B-it Kimi-K2.5 ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 1.0 0.073 1.0 0.058 0.0 0.035 1.0 0.025 16.0 0.258 0.0 0.027 AdvDiffVLM †[16] 1.0 0.033 0.0 0.046 1.0 0.045 0.0 0.034 11.0 0.266 1.0 0.038 SSA-CWA †[7] 0.0 0.024 1.0 0.043 1.0 0.033 0.0 0.025 14.0 0.272 0.0 0.017 AnyAttack †[43] 1.0 0.037 0.0 0.052 0.0 0.040 0.0 0.028 9.0 0.216 2.0 0.026 M-Attack [24] 59.6 0.509 52.6 0.459 62.2 0.518 36.8 0.354 18.9 0.318 39.4 0.364 FOA-Attack [21] 66.3 0.547 58.2 0.491 67.7 0.554 41.7 0.380 22.1 0.339 43.6 0.408 M-Attack-V2 [45] 77.0 0.620 69.6 0.567 77.9 0.618 52.3 0.449 30.2 0.396 56.3 0.483
+> FRA-Attack (Ours) 80.6 0.653 77.6 0.617 87.1 0.687 57.3 0.482 28.0 0.369 69.0 0.568
+
+Table 4: Component ablation of FRA-Attack’s performance on three closed-source models.                                             
+
+> Variant GPT-5.4 Claude-Opus-4.6 Gemini-3-flash ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 23.4 0.268 49.2 0.433 26.8 0.310 FOA-Attack [21] 27.3 0.300 51.3 0.455 30.9 0.341 M-Attack-V2 [45] 37.9 0.369 64.5 0.536 47.5 0.437
+> FRA-Attack 44.5 0.411 76.8 0.613 50.8 0.456 w/o FGR 39.0 0.387 72.7 0.585 53.1 0.467
+> w/o DCT alignment 38.7 0.366 74.0 0.597 48.1 0.430
+
+Table 5: Replacing the three-CLIP ensemble with a single ViT-B/16 surrogate.                              
+
+> Method GPT-5.4 Claude Gemini ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 2.0 0.080 1.0 0.073 2.0 0.081 FOA-Attack [21] 3.0 0.086 7.0 0.139 5.0 0.119 M-Attack-V2 [45] 7.0 0.138 13.0 0.164 7.0 0.153
+> FRA-Attack 6.0 0.143 23.0 0.257 14.0 0.205
+
+frequency components is important for maintaining transferable optimization directions. Among all polynomial decay settings, p=1 .5 achieves the best balance between suppressing surrogate-specific noise and retaining transferable semantic signals. 
+
+Momentum-based optimization remains critical for transfer attacks. Table 6 shows that optimizer choice has a substantial impact on transferability. Removing momentum leads to a significant drop in ASR, confirming that iterative gradient accumulation is important for stabilizing transferable perturbation directions. Although PGD-Adam performs competitively and slightly improves GPT-5.4 performance, its adaptive normalization reduces the overall cross-model average. We therefore adopt MI-FGSM as the default optimizer throughout the paper. 4/255 8/255 16/255 32/255   
+
+> Perturbation budget ()
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> Mean ASR (%)
+> main paper budget M-Attack-V2
+> FRA-Attack (Ours)
+> +2.0
+> +7.0
+> +8.0
+> +12.3
+> 5.0
+> 29.0
+> 61.7
+> 80.3
+> 3.0
+> 22.0
+> 53.7
+> 68.0
+
+Figure 4: Mean ASR (%) of closed-source models with varied ℓ∞ budget. 
+
+The advantage of FRA-Attack persists across per-turbation budgets. Figure 4 evaluates transferability under different ℓ∞ budgets. FRA-Attack consistently outperforms previous methods across all budgets, and the gap becomes more pronounced as the perturba-tion budget increases. This suggests that gains does not rely on a specific attack strength, but comes from learning more transferable perturbation directions. 
+
+FGR remains effective even without surrogate en-sembling. Table 5 replaces the three-model surrogate ensemble with a single ViT-B/16 encoder. Although all methods experience a substantial performance drop, FRA-Attack still achieves the strongest overall transferability on most victims. The improvement is particularly clear on Claude-Opus-4.6 and Gemini-3-flash, indicating that frequency-domain alignment and gradient regularization remain effective even when cross-model diversity from surrogate ensembling is limited. Results suggest that FGR acts as a transferability-oriented regularizer rather than relying on ensemble-specific effects. 
+
+4 Related Works 
+
+4.1 Multimodal Large Language Models 
+
+Large language models (LLMs) have demonstrated remarkable performance in numerous applications. Exploiting the potential of LLMs, transformer-based multimodal large language models (MLLMs) can enhance the vision-language semantics from large-scale image-text pairs, facilitating downstream tasks including image captioning, visual question answering, etc. Recent advancements in MLLMs have yielded a diverse ecosystem. Open-source models, including BLIP-2 [ 22 ], Flamingo [ 2], LLaVA [ 26 ], Llama 3 [ 12 ], Gemma 3 [ 35 ], Qwen3-VL [ 4], GLM-4.5V [ 17 ], and Kimi-K2.5 [ 36 ]show strong performance on standard benchmarks, while proprietary models, such as GPT-5 [ 32 ], Claude-Opus-4.6 [ 3 ], and Gemini-2.5 [ 6], often excel in more challenging tasks, like image editing and cross-modal reasoning. Despite their performance, the security issues of MLLMs are equally 8None                   
+
+> (baseline)
+> Per-band
+> clipping
+> Hard sparse
+> threshold
+> Reciprocal
+> 1/(1+ d)
+> Sigmoid
+> ((dc))
+> Polynomial
+> (1 d)1.5
+> 50
+> 55
+> 60
+> 65
+> 70
+> Mean ASR (%)
+> 62.8 62.7
+> 58.2
+> 66.8
+> 65.7
+> 69.0
+> (a) FGR variant family
+> phase-breaking
+> phase-preserving
+> default ( p= 1.5)
+> 0.5 1.0 1.5 2.0 2.5 3.0
+> Polynomial exponent pin (1 d)p
+> 50
+> 55
+> 60
+> 65
+> 70
+> Mean ASR (%)
+> no-FGR baseline 60.5
+> 65.0
+> 69.0
+> 63.0
+> 57.0
+> 53.5
+> (b) Polynomial psweep
+> default p= 1.5
+
+Figure 3: Ablation Study of FGR design. (a) Mean ASR (%) for five FGR variants and a no-FGR baseline; (b) Mean ASR (%) with different Polynomial exponent p
+
+critical and remain largely unresolved. The closed-source MLLMs conceal internal mechanisms and vulnerabilities, making it challenging to evaluate their robustness under black-box scenarios. 
+
+4.2 Transfer-based Adversarial Attacks on MLLMs 
+
+Black-box adversarial attacks on MLLMs are generally divided into query-based methods and transfer-based methods. The latter crafts adversarial examples on open-source surrogate models and transfers them to closed-source victims without requiring target-side gradients or repeated API queries. AttackVLM [ 46 ] first demonstrated that image-to-image feature alignment on surrogate vision encoders such as CLIP [ 30 ] and BLIP [ 23 ] transfers effectively to downstream MLLMs including MiniGPT [ 48 ] and LLaVA [ 26 ]. Subsequent works mainly improved transferability from three perspectives. First, several methods enhanced optimization robustness through loss design and augmentation strategies, including sharpness-aware optimization in CWA [ 5], spectrum-guided augmentation in SSA-CWA [ 7], large-scale self-supervised alignment in AnyAttack [ 43 ], and diffusion-based feature matching in AdvDiffVLM [ 16 ]. Second, recent works explored fine-grained local feature alignment to better capture transferable visual semantics. M-Attack [ 24 ]introduced multi-scale local feature matching via random cropping and resizing, while FOA-Attack [ 21 ] formulated local alignment through optimal transport. M-Attack-V2 [ 45 ] further improved transferability using stronger CLIP ensembles and target-aware semantic guidance, representing one of the strongest existing transfer baselines against closed-source MLLMs. Beyond CLIP-style surrogates, recent studies have also investigated dynamic vision-language alignment [ 13 ] and broader transfer protocols across black-box VLMs [18]. 
+
+4.3 Frequency-Domain Adversarial Attacks 
+
+A parallel line of work explores the frequency domain to improve adversarial transferability. Early studies show that constraining perturbations to low-frequency components alone already yields stronger black-box transfer [ 15 ]. Spectrum-based input augmentations such as SSA [ 7], frequency-domain model augmentation [ 29 ], variance tuning [ 38 ], and spatial-momentum schemes [ 37 ] di-versify perturbations across DCT bands, while contrastive and centralized formulations align fre-quency content of clean and adversarial features for transferable attacks on classifiers [ 42 , 40 ]. More recent attacks operate directly on the gradient or feature spectrum: TESSER [ 14 ] and high-frequency augmentation with hierarchical-gradient fusion [ 47 ] regularize ViT gradients in spectral subspaces, commonality-oriented gradient optimization [ 10 ] and frequency-guided adaptive gradient attacks [ 8 ] reweight gradient components by cross-model consistency, and lightweight generators in-ject frequency-domain priors via attention [ 19 ]. These methods, however, are designed for CNN/ViT classification or detection tasks and do not address token-level feature alignment in MLLM vision encoders, where redundancy in spatial patch embeddings and surrogate-specific gradient noise jointly limit transfer to closed-source models. 
+
+5 Conclusion 
+
+We presented FRA-Attack, a transfer-based targeted attack against MLLMs that addresses two distinct sources of overfitting in the same frequency-domain framework. The redundant low-frequency content in spatial patch embeddings is bypassed by aligning only the high-frequency DCT components through optimal transport, and the surrogate-specific noise concentrated in the high-frequency band of the input gradient is suppressed by a continuous radial decay applied directly to the gradient spectrum. The two components act on different tensors and slot into existing transfer attack pipelines without modifying the surrogate architecture. On a panel of 15 victim MLLMs covering closed-9source standard, closed-source thinking, and open-source families, FRA-Attack achieves the strongest overall performance, and the design choice of a continuous radial decay over per-band statistical clipping is supported by the FGR ablation. 
+
+References 
+
+[1] Nasir Ahmed, T_ Natarajan, and Kamisetty R Rao. Discrete cosine transform. IEEE transactions on Computers , 100(1):90–93, 1974. [2] Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katherine Millican, Malcolm Reynolds, et al. Flamingo: a visual language model for few-shot learning. Advances in neural information processing systems ,35:23716–23736, 2022. [3] Anthropic. Claude opus 4.6 system card. Technical report, Anthropic, 2026. [4] Shuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, Xionghui Chen, Zesen Cheng, Lianghao Deng, Wei Ding, Chang Gao, Chunjiang Ge, et al. Qwen3-vl technical report. arXiv preprint arXiv:2511.21631 , 2025. [5] Huanran Chen, Shitong Shao, Ziyi Wang, Zirui Shang, Jin Chen, Xiaofeng Ji, and Xinxiao Wu. Bootstrap generalization ability from loss landscape perspective. In European conference on computer vision , pages 500–517. Springer, 2022. [6] Gheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice Pasupat, Noveen Sachdeva, Inderjit Dhillon, Marcel Blistein, Ori Ram, Dan Zhang, Evan Rosen, et al. Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 , 2025. [7] Yinpeng Dong, Huanran Chen, Jiawei Chen, Zhengwei Fang, Xiao Yang, Yichi Zhang, Yu Tian, Hang Su, and Jun Zhu. How robust is google’s bard to adversarial image attacks? arXiv preprint arXiv:2309.11751 , 2023. [8] Zewei Fu, Ya Li, and Yan Huang. Frequency-guided adaptive gradient attack for transferable adversarial examples. In Asian Conference on Pattern Recognition , pages 381–396. Springer, 2025. [9] Sensen Gao, Xiaojun Jia, Xuhong Ren, Ivor Tsang, and Qing Guo. Boosting transferability in vision-language attacks via diversification along the intersection region of adversarial trajectory. In European Conference on Computer Vision , pages 442–460. Springer, 2024. [10] Yanting Gao, Yepeng Liu, Junming Liu, Qi Zhang, Hongyun Zhang, Duoqian Miao, and Cairong Zhao. Boosting adversarial transferability via commonality-oriented gradient optimization. In Chinese Conference on Pattern Recognition and Computer Vision (PRCV) , pages 62–76. Springer, 2025. [11] Ian J. Goodfellow, Jonathon Shlens, and Christian Szegedy. Explaining and harnessing adver-sarial examples. In 3rd International Conference on Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings , 2015. [12] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et al. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 , 2024. [13] Chenhe Gu, Jindong Gu, Andong Hua, and Yao Qin. Improving adversarial transferability in mllms via dynamic vision-language alignment attack. arXiv preprint arXiv:2502.19672 , 2025. [14] Amira Guesmi, Bassem Ouni, and Muhammad Shafique. Tesser: Transfer-enhancing adversarial attacks from vision transformers via spectral and semantic regularization. arXiv preprint arXiv:2505.19613 , 2025. [15] Chuan Guo, Jared S Frank, and Kilian Q Weinberger. Low frequency adversarial perturbation. 
+
+arXiv preprint arXiv:1809.08758 , 2018. 10 [16] Qi Guo, Shanmin Pang, Xiaojun Jia, Yang Liu, and Qing Guo. Efficient generation of targeted and transferable adversarial examples for vision-language models via diffusion models. IEEE Transactions on Information Forensics and Security , 20:1333–1348, 2024. [17] Wenyi Hong, Wenmeng Yu, Xiaotao Gu, Guo Wang, Guobing Gan, Haomiao Tang, Jiale Cheng, Ji Qi, Junhui Ji, Lihang Pan, et al. Glm-4.5 v and glm-4.1 v-thinking: Towards versatile multimodal reasoning with scalable reinforcement learning. arXiv preprint arXiv:2507.01006 ,2025. [18] Kai Hu, Weichen Yu, Li Zhang, Alexander Robey, Andy Zou, Chengming Xu, Haoqi Hu, and Matt Fredrikson. Transferable adversarial attacks on black-box vision-language models. arXiv preprint arXiv:2505.01050 , 2025. [19] Man Hua and Ximing Liu. Fe-advgan: A lightweight model adversarial attack method based on frequency-domain guidance and attention mechanism. In 2025 International Conference on Algorithms, Software and Network Security (ASNS) , pages 30–35, 2025. [20] Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, et al. Gpt-4o system card. arXiv preprint arXiv:2410.21276 , 2024. [21] Xiaojun Jia, Sensen Gao, Simeng Qin, Tianyu Pang, Chao Du, Yihao Huang, Xinfeng Li, Yiming Li, Bo Li, and Yang Liu. Adversarial attacks against closed-source mllms via feature optimal alignment. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. [22] Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models. In International conference on machine learning , pages 19730–19742. PMLR, 2023. [23] Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In International conference on machine learning , pages 12888–12900. PMLR, 2022. [24] Zhaoyi Li, Xiaohan Zhao, Dong-Dong Wu, Jiacheng Cui, and Zhiqiang Shen. A frustratingly simple yet highly effective attack baseline: Over 90% success rate against the strong black-box models of gpt-4.5/4o/o1. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. [25] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In European conference on computer vision , pages 740–755. Springer, 2014. [26] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. Advances in neural information processing systems , 36:34892–34916, 2023. [27] Liangchen Liu, Nannan Wang, Chen Chen, Decheng Liu, Xi Yang, Xinbo Gao, and Tongliang Liu. Frequency-based comprehensive prompt learning for vision-language models. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2025. [28] Xin Liu, Yichen Zhu, Yunshi Lan, Chao Yang, and Yu Qiao. Safety of multimodal large language models on images and text. In Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence , pages 8151–8159, 2024. [29] Yuyang Long, Qilong Zhang, Boheng Zeng, Lianli Gao, Xianglong Liu, Jian Zhang, and Jingkuan Song. Frequency domain model augmentation for adversarial attack. In European conference on computer vision , pages 549–566. Springer, 2022. [30] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from natural language supervision. In International conference on machine learning ,pages 8748–8763. PmLR, 2021. 11 [31] Yuchen Ren, Zhengyu Zhao, Chenhao Lin, Bo Yang, Lu Zhou, Zhe Liu, and Chao Shen. Improving adversarial transferability on vision transformers via forward propagation refinement. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 25071– 25080, 2025. [32] Aaditya Singh, Adam Fry, Adam Perelman, Adam Tart, Adi Ganesh, Ahmed El-Kishky, Aidan McLaughlin, Aiden Low, AJ Ostrow, Akhila Ananthram, et al. Openai gpt-5 system card. arXiv preprint arXiv:2601.03267 , 2025. [33] Ling Tang, YueFeng Chen, Hui Xue, and Quanshi Zhang. Towards the resistance of neural network fingerprinting to fine-tuning. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. [34] Ling Tang, Wen Shen, Zhanpeng Zhou, Yuefeng Chen, and Quanshi Zhang. Defects of convolutional decoder networks in frequency representation. In International Conference on Machine Learning , pages 33758–33791. PMLR, 2023. [35] Gemma Team. Gemma 3 technical report. arXiv preprint arXiv:2503.19786 , 2025. [36] Kimi Team, Tongtong Bai, Yifan Bai, Yiping Bao, SH Cai, Yuan Cao, Y Charles, HS Che, Cheng Chen, Guanduo Chen, et al. Kimi k2. 5: Visual agentic intelligence. arXiv preprint arXiv:2602.02276 , 2026. [37] Guoqiu Wang, Huanqian Yan, and Xingxing Wei. Enhancing transferability of adversarial examples with spatial momentum. In Chinese Conference on Pattern Recognition and Computer Vision (PRCV) , pages 593–604. Springer, 2022. [38] Xiaosen Wang and Kun He. Enhancing the transferability of adversarial attacks through variance tuning. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pages 1924–1933, 2021. [39] Juanjuan Weng, Zhiming Luo, and Shaozi Li. Exploring frequencies via feature mixing and meta-learning for improving adversarial transferability. IEEE Transactions on Image Processing ,2026. [40] Shangbo Wu, Yu-an Tan, Yajie Wang, Ruinan Ma, Wencong Ma, and Yuanzhang Li. Towards transferable adversarial attacks with centralized perturbation. In Proceedings of the AAAI conference on artificial intelligence , volume 38, pages 6109–6116, 2024. [41] Yifeng Xiong, Jiadong Lin, Min Zhang, John E Hopcroft, and Kun He. Stochastic variance reduced ensemble adversarial attack for boosting the adversarial transferability. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 14983–14992, 2022. [42] Hunmin Yang, Jongoh Jeong, and Kuk-Jin Yoon. FACL-Attack: Frequency-aware contrastive learning for transferable adversarial attacks. In Proceedings of the AAAI Conference on Artificial Intelligence , 2024. [43] Jiaming Zhang, Junhong Ye, Xingjun Ma, Yige Li, Yunfan Yang, Yunhao Chen, Jitao Sang, and Dit-Yan Yeung. Anyattack: Towards large-scale self-supervised adversarial attacks on vision-language models. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 19900–19909, 2025. [44] Jianping Zhang, Yizhan Huang, Weibin Wu, and Michael R Lyu. Transferable adversarial attacks on vision transformers with token gradient regularization. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 16415–16424, 2023. [45] Xiaohan Zhao, Zhaoyi Li, Yaxin Luo, Jiacheng Cui, and Zhiqiang Shen. Pushing the frontier of black-box lvlm attacks via fine-grained detail targeting. arXiv preprint arXiv:2602.17645 ,2026. [46] Yunqing Zhao, Tianyu Pang, Chao Du, Xiao Yang, Chongxuan Li, Ngai-Man Man Cheung, and Min Lin. On evaluating adversarial robustness of large vision-language models. Advances in Neural Information Processing Systems , 36:54111–54138, 2023. 12 [47] Yayin Zheng, Chen Wan, Zihong Guo, Hailing Kuang, and Xiaohai Lu. Boosting adversarial transferability via high-frequency augmentation and hierarchical-gradient fusion. arXiv preprint arXiv:2505.21181 , 2025. [48] Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny. Minigpt-4: En-hancing vision-language understanding with advanced large language models. In The Twelfth International Conference on Learning Representations , 2024. 
+
+A DCT High-Frequency Energy Visualization 
+
+We visualize on real source–target–adversarial triples how the DCT high-frequency selection used by FRA-Attack (Section 2.4) localizes the salient regions that drive the alignment objective. For each pair we extract the patch embeddings E from the ViT-B/16 surrogate, apply the token-wise Type-II DCT (Eq. 2), select the top-n=5 high-frequency components above the threshold θ=20 ,reconstruct the per-patch energy through a single inverse DCT, and overlay the resulting 14 ×14 
+
+heatmap on the original 224 ×224 image with 50% transparency and the jet colormap. Figure 5 reports six representative pairs drawn from the 1,000 -pair benchmark. The target column shows that on natural images the high-frequency energy concentrates on the semantic main subject (clock tower, fire hydrant, kite, skier, umbrella array, and roadside vehicles), confirming that the high-frequency DCT band of the patch sequence is a faithful proxy for the perceptually salient region. The source column displays the unrelated source image and serves as a reference. The adversarial column shows that after the FRA-Attack optimization the high-frequency energy shifts away from the source main subject towards the spatial layout of the target, consistent with the cross-victim ASR gain reported in the main tables. 
+
+B Limitations & Broader impact 
+
+Limitations. Three limitations are worth stating explicitly. First, the surrogate ensemble used in this work consists of three CLIP variants, and our gains depend on the cross-model phase diversity that this ensemble provides; FGR alone on a single CLIP surrogate does not yield the same improvement, so the method is best understood as an ensemble-side regularizer rather than a single-model technique. Second, both proposed components operate on continuous-tone natural images and inherit the assumption that the gradient and the patch embedding spectra are well approximated by smooth radial profiles; the method is not designed for highly structured inputs such as text-rich screenshots or line drawings, where the spectral assumption may not hold. Third, our evaluation focuses on the captioning protocol with GPTScore and KMR judgments. Whether the improvement persists under instruction-grounded protocols such as visual question answering or multi-turn reasoning is left to future work. 
+
+Broader impact. FRA-Attack improves the transferability of targeted adversarial perturbations against deployed MLLMs, which strengthens the case that current vision-language interfaces should not be relied upon as a sole verification step for safety-critical decisions. We release the method together with the evaluation panel to support the development of stronger detection and certified-defense baselines, rather than as an offensive tool against any specific deployed system. 
+
+C Detailed Description of FRA-Attack 
+
+C.1 Algorithm Pseudocode (Extended) 
+
+Algorithm 1 summarizes FRA-Attack at the loop level. We restate it here with full hyperparameter notation and per-step comments to facilitate re-implementation. The complete code, configuration files, and reproduction commands are released in the anonymous repository (Appendix K). 
+
+C.2 Surrogate Model Details 
+
+Table 7 reports the three CLIP variants used as the surrogate ensemble, including release source, embedding dimension, and image preprocessing. All three backbones share the same input resolution 
+
+224 × 224 , and we apply the same three-stage random crop augmentation across them. 13 Source Target Adversarial 
+
+> Big Ben Hydrant Kites Skier Atrium Mountain road
+
+Figure 5: Per-patch high-frequency DCT energy ( n=5 , θ=20 ) of the source, target, and FRA-Attack adversarial example, overlaid on the original image with the jet colormap. 
+
+C.3 Full Experimental Setup 
+
+This subsection collects the implementation details deferred from Section 3.1. 
+
+Source–target pair construction. We sample 1,000 source images from the NIPS 2017 Adversarial Attacks and Defenses Competition development set, resize each to 224 × 224 × 3, and pair each source with a target image drawn uniformly without replacement from the MSCOCO [ 25 ] validation split. The same 1,000 pairs are reused across all 7 baselines, FRA-Attack, and all 15 victims for strict comparability. To our knowledge, this is the largest victim panel used to date for transfer-14 Algorithm 1 FRA-Attack: Frequency-domain Regularized Alignment Attack 
+
+Require: Source image xs, target image xt, surrogate ensemble {fj }Jj=1 , perturbation budget ϵ, step size α, iterations N , frequency threshold θ, number of selected frequencies n, global weight wg ,local weight wl, FGR decay exponent p, momentum decay μ, dynamic-weighting temperature T
+
+Ensure: Adversarial image xadv  
+
+> 1:
+
+δ ← 0, m ← 0 
+
+> 2:
+
+for t = 1 , . . . , N do  
+
+> 3:
+
+for j = 1 , . . . , J do  
+
+> 4:
+
+{Extract global and local features}  
+
+> 5:
+
+g(s) 
+
+> j
+
+, E(s) 
+
+> j
+
+← fj (xs + δ); g(t) 
+
+> j
+
+, E(t) 
+
+> j
+
+← fj (xt) 
+
+> 6:
+
+{DCT and high-frequency selection (Eqs. 2–5)}  
+
+> 7:
+
+L(s) 
+
+> j
+
+← HighFreqDCT( E(s) 
+
+> j
+
+, θ, n ); L(t) 
+
+> j
+
+← HighFreqDCT( E(t) 
+
+> j
+
+, θ, n ) 
+
+> 8:
+
+{Per-model loss}  
+
+> 9:
+
+Lglobal j ← 1 − cos( g(s) 
+
+> j
+
+, g(t) 
+
+> j
+
+) 
+
+> 10:
+
+Lf req j ← OT( L(s) 
+
+> j
+
+, L(t) 
+
+> j
+
+); see Eq. (6)  
+
+> 11:
+
+Lj ← wg · L global j + wl · L f req j 
+
+> 12:
+
+end for  
+
+> 13:
+
+{Dynamic ensemble weighting [21]}  
+
+> 14:
+
+S(t) 
+
+> j
+
+← L (t) 
+
+> j
+
+/L(t−1)  
+
+> j
+
+, ∀j 
+
+> 15:
+
+Wj ← J · Softmax 
+
+
+
+{S(t) 
+
+> j
+
+/T }Jj=1 
+
+
+
+> j
+
+, ∀j; L ← PJj=1 Wj · L j 
+
+> 16:
+
+{Frequency-domain gradient regularization (§2.5)}  
+
+> 17:
+
+˜∇ ← FGR( ∇δ L; p) 
+
+> 18:
+
+{MI-FGSM update with regularized gradient}  
+
+> 19:
+
+m ← μ · m + ˜∇/∥ ˜∇∥1 
+
+> 20:
+
+δ ← clip( δ − α · sign( m), −ϵ, +ϵ) 
+
+> 21:
+
+end for  
+
+> 22: 23:
+
+return clamp( xs + δ, 0, 1) 
+
+Table 7: Surrogate model details. All variants use the same input resolution and augmentation pipeline; only the backbone differs.                   
+
+> Surrogate Source Patch Embed. d# patches P
+> CLIP ViT-B/16 [30] openai 16 512 196 CLIP ViT-B/32 [30] openai 32 512 49 CLIP ViT-g-14-laion2B [30] open_clip / laion2B 14 1024 256
+
+based MLLM attacks, jointly covering proprietary, reasoning, and open-weight settings in a single evaluation. 
+
+Hyperparameters. Perturbation budget ϵ = 16 /255 (ℓ∞); step size α = 1 /255 ; iterations N =300 . The DCT alignment uses high-frequency threshold θ = 10 , number of selected high-frequency components n = 10 , global weight wg = 1 .0, local weight wl = 0 .2, and Sinkhorn entropic regularization λ = 0 .1. FGR uses the polynomial radial decay (Eq. 8) with exponent p = 1 .5. The MI-FGSM momentum decay is μ = 1 .0 and the dynamic-weighting temperature is T = 1 .0. Sweeps over θ, n, wl, p, ϵ, N , and the optimizer are reported in Appendix D. 
+
+M-Attack-V2 configuration. We follow the standard targeted transfer protocol of image-to-image 
+
+attack, in which a single source is steered toward a single specified target. The publicly released M-Attack-V2 [ 45 ] deviates from this protocol by enabling target-side retrieval ( use_retrieval=True ,
+
+target_num=3 ): for each target it retrieves k−1 semantically similar images from an MSCOCO embedding pool and aligns the source against the resulting image-to-images set. This both injects external supervision (an auxiliary corpus and a retrieval encoder that lie outside the standard threat model) and changes the optimization objective from matching one target image to matching a target-15 conditioned cluster, so any ASR difference would conflate the attack itself with the choice of retrieval pool. We therefore set use_retrieval=False and target_num=1 , keeping every other component (Adam, α=0 .005 , ϵ=16 /255 , N =300 , multi-pass K=10 , pooler-weighted alignment with β=0 .3,three-stage source crop, target augmentation) at the public defaults. The surrogate ensemble follows Section 3.1. This configuration is used both in the main result tables and in the component ablation of Section 3.3. 
+
+Hardware and runtime. All experiments run on 4× NVIDIA H200 GPUs. A full 1,000 -pair attack takes 3 hours wall-clock under the default settings; victim-side evaluation calls (caption generation and GPTScore matching) are issued through the corresponding vendor APIs. 
+
+D Extended Ablation Study 
+
+This appendix reports the supplementary ablations referenced from Section 3.3: (1) attack perfor-mance with keyword matching in Figure 6 (Section D.1); (2) the per-cell numbers behind the FGR decay-function and exponent ablation summarized in Figure 3 (Section D.2); (3) the DCT alignment hyperparameters θ and n (Section D.3); (4) the loss balance wl (Section D.4); and (5) the perturbation budget ϵ and iteration count N (Section D.5). Section D.2 reports mean ASR on a 6-victim pilot panel of 100 source–target pairs (GPT-5.4, GPT-4o, Claude-Opus-4.6, Gemini-2.5-flash, Qwen3-VL-8B, GLM-4.6V) to match the broader victim coverage that motivated the design choice. The remaining sweeps in Sections D.3–D.5 use the same 3-victim closed-source standard victim group as the main panel (GPT-5.4, Claude-Opus-4.6, Gemini-3-flash), evaluated on the 100 -pair pilot to keep the cluster footprint of the sweeps tractable; the default configuration on this 100 -pair panel matches the 1,000 -pair main panel within ±3 ASR points, so the relative ordering and trends transfer. 
+
+D.1 Attack performance with keyword matching. 0     
+
+> 20
+> 40
+> 60
+> 80
+> 100
+> KMR (%)
+> GPT-5.4 Claude-Opus-4.6 Gemini-3-flash
+> Strictness level
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> KMR (%)
+> Qwen3-VL-8B
+> Strictness level
+> GLM-4.6V
+> Strictness level
+> Llama-3.2-11B-V
+> M-Attack FOA-Attack M-Attack-V2 FRA-Attack
+
+Figure 6: Three-level keyword matching rate (KMR) on closed-source and open-source MLLMs. ASR and AvgSim both depend on a GPT-based caption judge, so we report the key-word matching rate (KMR) as a judgment-free cross-check: KMR counts the frac-tion of target-image keywords appearing in the victim’s response at three strictness levels α, β, γ (Appendix G). Figure 6 re-ports per-victim KMR on the three closed-source standard victims and three open-source models. All six panels share the same shape: every method drops monoton-ically from α to γ, FRA-Attack sits at the top of the range, and its gap to M-Attack-V2 widens with strictness, peaking at γ—the level where the caption must contain every target keyword rather than a subset. This is consistent with the phase-preserving design of FGR (Section 2.5), which removes surrogate-specific noise without dampening transferable directions. The three (victim, strictness) combinations where FRA-Attack is not the top method (GPT-5.4 at β;GLM-4.6V at α and β) and the full per-cell table appear in Appendix F. 
+
+D.2 FGR Decay Function and Exponent: Per-cell Numbers 
+
+Table 8 provides the per-cell numbers behind Figure 3. The polynomial decay ϕ(d) = (1 − d)p used by FRA-Attack is compared against alternative implementations: two non-radial variants illustrate the failure mode of clamp- or threshold-based regularization—(i) per-band statistical clipping that partitions the frequency plane into low/mid/high bands by thresholds τl < τ h and clips each band B
+
+within μB ± γBσB; (ii) a magnitude-based hard sparse threshold that retains the top K% coefficients in each band and zeros the rest—and two continuous, phase-preserving radial alternatives: (iii) a reciprocal decay ϕ(d) = 1 /(1 + βd ) and (iv) a sigmoid decay ϕ(d) = σ(−β(d − c)) . The polynomial decay is additionally swept over p ∈ { 0.5, 1.0, 2.0, 2.5, 3.0} around the default p=1 .5. The two 16 Table 8: Ablation on the FGR decay function and exponent. Mean ASR (%) over the 6-victim panel on 100 source–target pairs (GPT-5.4, GPT-4o, Claude-Opus-4.6, Gemini-2.5-flash, Qwen3-VL-8B, GLM-4.6V).                                                             
+
+> FGR variant Hyperparameter Phase preserving? Mean ASR (%)
+> None (no gradient regularization) ––62.8 Per-band statistical clipping (3 bands) γ=1 .5/1.0/0.5no 62.7 Hard sparse threshold (top-K%) K=50 /30 /30 no 58.2 Reciprocal radial 1/(1 + βd )β=2 .0yes 66.8 Sigmoid radial σ(−β(d−c)) β=6 , c =0 .5yes 65.7 Polynomial radial (1 −d)pp=0 .5yes 60.5 Polynomial radial (1 −d)pp=1 .0yes 65.0 Polynomial radial (1 −d)pp=1 .5(default) yes 69.0
+> Polynomial radial (1 −d)pp=2 .0yes 63.0 Polynomial radial (1 −d)pp=2 .5yes 57.0 Polynomial radial (1 −d)pp=3 .0yes 53.5
+
+findings (phase-preserving radial decay is the only family that helps; p=1 .5 is a sharp optimum) are stated and discussed in Section 3.3. 
+
+D.3 Sensitivity Analysis of DCT Alignment 
+
+Table 9: Sensitivity Analysis of DCT alignment.                    
+
+> Sweep Value
+> Threshold θ510 15 20 Avg ASR (%) 60.3 60.0 60.7 60.3 # components n510 15 20 Avg ASR (%) 58.3 60.0 65.0 60.0
+
+Table 9 sweeps the high-frequency threshold 
+
+θ and the number of selected high-frequency components n. ASR (%) are averaged across GPT-5.4, Claude-Opus-4.6, and Gemini-3-flash on the 100 -pair pilot panel; the default θ=n=10 
+
+matches the 1,000 -pair main panel within ±3
+
+ASR. The default configuration (in bold) is the same FRA-Attack run reported in the main result tables; sweeps reuse the same source–target pairs and only change the indicated hyperparameter. The DCT alignment is robust to both hyperparameters: across the θ sweep all four configurations stay within ±0.7 ASR of the default, indicating that the high-frequency band is well-separated from the low-frequency content and the exact cutoff matters little. The n sweep shows a mild peak at n=15 
+
+(+5 .0 over the default), suggesting the budget for selected components could be increased; we keep the default n=10 in the main tables for consistency with the 1,000 -pair main panel and to keep the DCT alignment cost in the same range as the [CLS] alignment term. 
+
+D.4 Loss Balance 
+
+Table 10: Ablation on the local loss weight wl.            
+
+> Sweep Value
+> Local weight wl0.1 0.2 0.5 1.0 2.0 Avg ASR (%) 61.3 60.0 62.7 63.0 57.3
+
+Table 10 sweeps the local loss weight wl that controls the contribution of the high-frequency DCT alignment term relative to the global 
+
+[CLS] cosine term (with wg = 1 .0 fixed). The default value is wl = 0 .2, chosen so that the two loss terms have comparable scale at the start of optimization. ASR (%) are averaged across GPT-5.4, Claude-Opus-4.6, and Gemini-3-flash on the 
+
+100 -pair pilot panel; the default value matches the 1,000 -pair main panel within ±3 ASR. The local loss weight is non-critical inside a wide range wl ∈ [0 .1, 1.0] , where ASR varies by less than 3 points around the default. Performance only drops noticeably when wl is pushed to 2.0, at which point the high-frequency DCT term dominates the global [CLS] alignment and the perturbation drifts away from the coarse target semantics. We therefore keep wl = 0 .2, which keeps the two terms balanced at the initialization scale and matches the choice used in the main panel. 
+
+D.5 Perturbation Budget and Iteration Count 
+
+17 Table 11: Sensitivity of FRA-Attack to the pertur-bation budget ϵ and iteration count N .                     
+
+> Budget ϵ(ℓ∞)4/255 8/255 16 /255 (default) 32 /255
+> Avg ASR (%) 4.0 28.3 60.0 80.0
+> Iterations N50 100 300 (default) 500 Avg ASR (%) 29.0 48.7 60.0 62.3
+
+Table 11 reports the sensitivity of FRA-Attack to the perturbation budget ϵ and the iteration count 
+
+N . The default values are ϵ = 16 /255 and N =300 . Average ASR (%) across GPT-5.4, Claude-Opus-4.6, and Gemini-3-flash on the 100 -pair pilot panel; the default ϵ=16 /255 , N =300 
+
+matches the 1,000 -pair main panel within ±3
+
+ASR. FRA-Attack scales monotonically with the perturbation budget: ϵ = 4 /255 is too small to escape the natural caption neighbourhood ( 4.0 ASR), ϵ = 8 /255 already lands the perturbation in the targeted basin for roughly a quarter of pairs, the default ϵ = 16 /255 recovers the main result, and doubling to ϵ = 32 /255 adds another 20 points but is far above the conventional imperceptibility regime. The iteration sweep is more saturating: between N = 300 (default) and N = 500 ASR moves by only +2 .3 points, indicating that the attack is close to converged at the default budget and the additional cost of N = 500 is not justified. 
+
+E More Comparison Results under Varied Thresholds 
+
+The main results in Section 3.2 use the conventional GPTScore success threshold of 0.5. We report ASR and AvgSim under three additional thresholds for completeness: a permissive threshold 0.3
+
+(Tables 12–14), a strict threshold 0.7 (Tables 15–17), and a very strict threshold 0.9 (Tables 18–20). The relative ordering across methods is consistent across all four thresholds. Table 12: ASR (%) and AvgSim at threshold 0.3 on closed-source standard MLLMs. Same evaluation set as Table 1.                                                                                                                      
+
+> Method GPT-5.2 GPT-5.4 Claude-Opus-4.6 Claude-Sonnet-4.6 Gemini-3-flash Gemini-2.5-flash ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 8.0 0.060 4.0 0.044 6.0 0.032 6.0 0.038 3.0 0.025 3.0 0.033 AdvDiffVLM †[16] 7.0 0.047 4.0 0.036 7.0 0.035 7.0 0.043 8.0 0.054 7.1 0.046 SSA-CWA †[7] 7.0 0.049 3.0 0.033 0.0 0.022 2.0 0.022 2.0 0.028 1.0 0.029 AnyAttack †[43] 7.0 0.053 9.0 0.057 4.0 0.039 7.0 0.039 4.0 0.038 5.1 0.043 M-Attack [24] 51.6 0.272 55.4 0.268 80.5 0.433 77.0 0.402 67.2 0.310 80.6 0.407 FOA-Attack [21] 59.5 0.312 61.7 0.300 82.7 0.455 82.2 0.444 70.9 0.341 85.0 0.439 M-Attack-V2 [45] 69.5 0.383 71.6 0.369 92.2 0.536 87.3 0.531 84.1 0.437 91.5 0.544
+> FRA-Attack (Ours) 72.3 0.427 75.4 0.411 94.2 0.613 92.1 0.595 84.4 0.456 92.9 0.545
+
+Table 13: ASR (%) and AvgSim at threshold 0.3 on closed-source thinking MLLMs. Same evaluation set as Table 2. 
+
+Method GPT-5.4-thinking Claude-Opus-4.6-thinking Gemini-3-flash-thinking ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 50.9 0.264 77.1 0.414 61.4 0.306 FOA-Attack [21] 58.5 0.301 82.6 0.453 68.1 0.348 M-Attack-V2 [45] 70.0 0.377 89.3 0.547 80.5 0.426 
+
+FRA-Attack (Ours) 72.9 0.416 92.7 0.614 79.7 0.456 
+
+F Per-cell Keyword Matching Rate 
+
+This appendix provides the per-cell numbers behind Figure 6 in Section 3.2. KMR is reported at three increasingly strict matching levels α, β, γ defined in Appendix G; α counts a caption as matched if any target keyword appears, β requires a majority, and γ requires every target keyword to appear. 
+
+G Detailed Evaluation Prompt 
+
+We adopt the same LLM-as-a-judge evaluation framework as M-Attack [ 24 ] and FOA-Attack [ 21 ]for direct comparability. This appendix lists the prompts used for caption generation, GPTScore semantic similarity, and KMR keyword extraction. 18 Table 14: ASR (%) and AvgSim at threshold 0.3 on open-source MLLMs. Same evaluation set as Table 3.                                                                                                                      
+
+> Method Qwen3-VL-8B Qwen3-VL-32B GLM-4.6V Llama-3.2-11B-V Gemma-3-27B-it Kimi-K2.5 ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 11.0 0.073 10.0 0.058 7.0 0.035 5.0 0.025 54.0 0.258 5.0 0.027 AdvDiffVLM †[16] 7.0 0.033 8.0 0.046 9.0 0.045 6.0 0.034 68.0 0.266 6.0 0.038 SSA-CWA †[7] 4.0 0.024 7.0 0.043 3.0 0.033 3.0 0.025 66.0 0.272 1.0 0.017 AnyAttack †[43] 6.0 0.037 6.0 0.052 6.0 0.040 6.0 0.028 56.0 0.216 4.0 0.026 M-Attack [24] 85.1 0.509 83.4 0.459 88.5 0.518 65.6 0.354 72.0 0.318 69.6 0.364 FOA-Attack [21] 89.2 0.547 87.9 0.491 90.5 0.554 70.1 0.380 73.5 0.339 77.4 0.408 M-Attack-V2 [45] 93.1 0.620 89.4 0.567 95.4 0.618 80.3 0.449 80.6 0.396 81.0 0.483
+> FRA-Attack (Ours) 95.6 0.653 94.8 0.617 97.4 0.687 82.2 0.481 77.3 0.369 90.4 0.568
+
+Table 15: ASR (%) and AvgSim at threshold 0.7 on closed-source standard MLLMs.                                                                                                                      
+
+> Method GPT-5.2 GPT-5.4 Claude-Opus-4.6 Claude-Sonnet-4.6 Gemini-3-flash Gemini-2.5-flash ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 1.0 0.060 0.0 0.044 0.0 0.032 0.0 0.038 0.0 0.025 0.0 0.033 AdvDiffVLM †[16] 0.0 0.047 0.0 0.036 0.0 0.035 0.0 0.043 0.0 0.054 0.0 0.046 SSA-CWA †[7] 0.0 0.049 0.0 0.033 0.0 0.022 0.0 0.022 0.0 0.028 0.0 0.029 AnyAttack †[43] 0.0 0.053 0.0 0.057 0.0 0.039 0.0 0.039 0.0 0.038 0.0 0.043 M-Attack [24] 13.5 0.272 10.4 0.268 29.1 0.433 25.9 0.402 13.8 0.310 24.2 0.407 FOA-Attack [21] 17.0 0.312 13.5 0.300 33.2 0.455 32.3 0.444 16.3 0.341 28.5 0.439 M-Attack-V2 [45] 24.2 0.383 21.8 0.369 45.4 0.536 47.9 0.531 28.1 0.437 48.6 0.544
+> FRA-Attack (Ours) 33.6 0.427 26.8 0.411 58.5 0.613 57.3 0.595 32.5 0.456 45.5 0.545
+
+Caption-generation prompt. We query each victim MLLM with the following single prompt to obtain a free-form description of the input image: 
+
+Describe this image. 
+
+GPTScore semantic-similarity prompt. We use GPT-4o as the judge model. The judge receives the captions of the adversarial example and the target image and outputs a similarity score in [0 , 1] :
+
+Rate the semantic similarity between the following two texts on a scale from 0 to 1. Criteria for similarity measurement: 1. Main Subject Consistency: same key subject/object → higher score. 2. Relevant Description: same context or topic → higher score. 3. Ignore Fine-Grained Details: do not penalize phrasing or minor variation. 4. Partial Matches: extra information without contradiction → still high score. 5. Score Range: 1.0: nearly identical in meaning. 0.8–0.9: same subject, highly related descriptions. 0.7–0.8: same subject, core meaning aligned. 0.5–0.7: same subject, different perspectives or missing details. 0.3–0.5: related but not highly similar. 0.0–0.2: completely different subjects or unrelated. Text 1: {caption_adv} Text 2: {caption_tgt} Output only a single number between 0 and 1. Do not include any explanation or additional text. 
+
+KMR keyword-extraction prompt. We use GPT-4o to extract a small set of content nouns from the target caption, and check whether the same nouns (or their WordNet synsets) appear in the adversarial caption. The extraction prompt is: 
+
+From the following description, extract up to three concrete content nouns that identify the main subjects. Output them as a comma-separated list, lowercase, singular form, no 
+
+19 Table 16: ASR (%) and AvgSim at threshold 0.7 on closed-source thinking MLLMs. 
+
+Method GPT-5.4-thinking Claude-Opus-4.6-thinking Gemini-3-flash-thinking ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 11.2 0.264 28.5 0.414 14.4 0.306 FOA-Attack [21] 14.3 0.301 32.5 0.453 19.0 0.348 M-Attack-V2 [45] 23.1 0.377 48.8 0.547 28.1 0.426 
+
+FRA-Attack (Ours) 28.9 0.416 59.9 0.614 34.8 0.456 
+
+Table 17: ASR (%) and AvgSim at threshold 0.7 on open-source MLLMs.                                                                                                                      
+
+> Method Qwen3-VL-8B Qwen3-VL-32B GLM-4.6V Llama-3.2-11B-V Gemma-3-27B-it Kimi-K2.5 ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 1.0 0.073 1.0 0.058 0.0 0.035 1.0 0.025 14.0 0.258 0.0 0.027 AdvDiffVLM †[16] 0.0 0.033 0.0 0.046 0.0 0.045 0.0 0.034 10.0 0.266 0.0 0.038 SSA-CWA †[7] 0.0 0.024 0.0 0.043 0.0 0.033 0.0 0.025 12.0 0.272 0.0 0.017 AnyAttack †[43] 0.0 0.037 0.0 0.052 0.0 0.040 0.0 0.028 7.0 0.216 0.0 0.026 M-Attack [24] 43.7 0.509 33.6 0.459 44.2 0.518 23.3 0.354 14.6 0.318 22.0 0.364 FOA-Attack [21] 47.7 0.547 38.7 0.491 50.5 0.554 24.6 0.380 16.6 0.339 27.4 0.408 M-Attack-V2 [45] 60.9 0.620 52.2 0.567 61.2 0.618 33.2 0.449 24.6 0.396 40.7 0.483
+> FRA-Attack (Ours) 67.0 0.653 60.1 0.617 74.9 0.687 38.0 0.481 20.8 0.369 51.2 0.568
+
+extra text. Description: {caption_tgt} 
+
+H Comparison Results on Defense Methods 
+
+We evaluate the robustness of FRA-Attack against three representative input-space defenses applied at evaluation time: JPEG compression (quality 75 ), Gaussian smoothing (kernel 5 × 5, σ = 0 .5), and center cropping (crop ratio 0.9 followed by upsampling back to 224 × 224 ). Each defense is applied to the adversarial example before it is fed to the victim MLLM, and the captioning + GPTScore evaluation pipeline of Appendix G is then run on the defended image. JPEG and Gaussian smoothing act as low-pass filters that suppress high-frequency perturbation energy, while center cropping further perturbs the spatial alignment between the perturbation and the patch grid of the victim ViT. Table 22 reports ASR (%) and AvgSim under each defense for the strongest prior baseline (M-Attack-V2 in the v2 configuration of Section 3.1) and FRA-Attack on the three closed-source standard MLLMs used in the main evaluation. We focus on closed-source standard models because they are the most realistic deployment target for input-space defenses; extending the evaluation to open-source MLLMs and to learned defenses such as ComDefend is left for future work. Across all three defenses and all three victim models, FRA-Attack consistently retains higher ASR and AvgSim than M-Attack-V2. The advantage is most pronounced under JPEG compression and center cropping, where FRA-Attack improves ASR@ 0.5 by +9 to +16 points absolute over V2 (e.g., 
+
++9 .3 on Claude under JPEG, +16 .0 on Claude under center cropping), supporting our motivation: the FGR component attenuates the high-frequency band of the input gradient and steers the resulting perturbation toward lower-frequency, defense-resistant directions, so a low-pass or geometry-mild defense removes a smaller fraction of the attack energy than for a baseline that allocates more energy to high-frequency components. Gaussian smoothing with a σ = 0 .5 kernel is the strongest of the three defenses for both methods, but FRA-Attack still leads on 2 of 3 models (Claude +8 .0, Gemini-3-flash 
+
++9 .0) and is essentially tied on GPT-5.4, where both methods collapse to single-digit ASR. 
+
+I Commercial MLLM Response Visualizations 
+
+To complement the quantitative results, we provide rendered conversations with each closed-source MLLM on real source–target pairs from the 1,000 -pair benchmark. For every victim, each panel shows the target image, the FRA-Attack adversarial example, and the model’s response to the prompt “Describe this image.”; the responses shown are verbatim outputs collected during the main evaluation. 20 Table 18: ASR (%) and AvgSim at threshold 0.9 on closed-source standard MLLMs.                                                                                                                      
+
+> Method GPT-5.2 GPT-5.4 Claude-Opus-4.6 Claude-Sonnet-4.6 Gemini-3-flash Gemini-2.5-flash ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM †[46] 0.0 0.060 0.0 0.044 0.0 0.032 0.0 0.038 0.0 0.025 0.0 0.033 AdvDiffVLM †[16] 0.0 0.047 0.0 0.036 0.0 0.035 0.0 0.043 0.0 0.054 0.0 0.046 SSA-CWA †[7] 0.0 0.049 0.0 0.033 0.0 0.022 0.0 0.022 0.0 0.028 0.0 0.029 AnyAttack †[43] 0.0 0.053 0.0 0.057 0.0 0.039 0.0 0.039 0.0 0.038 0.0 0.043 M-Attack [24] 0.6 0.272 0.3 0.268 3.0 0.433 3.1 0.402 1.1 0.310 1.5 0.407 FOA-Attack [21] 0.8 0.312 0.6 0.300 4.1 0.455 3.5 0.444 1.3 0.341 2.4 0.439 M-Attack-V2 [45] 2.2 0.383 1.5 0.369 6.5 0.536 7.0 0.531 2.3 0.437 5.4 0.544
+> FRA-Attack (Ours) 3.3 0.427 3.8 0.411 12.1 0.613 12.1 0.595 4.0 0.456 5.2 0.545
+
+Table 19: ASR (%) and AvgSim at threshold 0.9 on closed-source thinking MLLMs. 
+
+Method GPT-5.4-thinking Claude-Opus-4.6-thinking Gemini-3-flash-thinking ASR AvgSim ASR AvgSim ASR AvgSim M-Attack [24] 0.6 0.264 2.6 0.414 1.4 0.306 FOA-Attack [21] 0.8 0.301 3.9 0.453 1.8 0.348 M-Attack-V2 [45] 2.1 0.377 8.0 0.547 2.2 0.426 
+
+FRA-Attack (Ours) 3.3 0.416 15.0 0.614 4.6 0.456 
+
+Figure 7: GPT-5.2 responses to FRA-Attack adversarial examples. 
+
+J Theoretical Justification 
+
+This appendix gives algebraic justifications for three design choices central to FRA-Attack: (1) why low-frequency DCT components of the patch sequence encode global structure while high-frequency components encode patch-specific fine-grained semantics; (2) why aligning the high-frequency DCT components of patch embeddings is more informative than aligning spatial-domain cluster centers; and (3) why the polynomial radial decay used by FGR preserves the spatial direction of the input gradient, while per-band statistical clipping does not. 21 Table 20: ASR (%) and AvgSim at threshold 0.9 on open-source MLLMs. 
+
+Method Qwen3-VL-8B Qwen3-VL-32B GLM-4.6V Llama-3.2-11B-V Gemma-3-27B-it Kimi-K2.5 ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim ASR AvgSim AttackVLM † [46] 0.0 0.073 0.0 0.058 0.0 0.035 0.0 0.025 10.0 0.258 0.0 0.027 AdvDiffVLM † [16] 0.0 0.033 0.0 0.046 0.0 0.045 0.0 0.034 5.0 0.266 0.0 0.038 SSA-CWA † [7] 0.0 0.024 0.0 0.043 0.0 0.033 0.0 0.025 6.0 0.272 0.0 0.017 AnyAttack † [43] 0.0 0.037 0.0 0.052 0.0 0.040 0.0 0.028 4.0 0.216 0.0 0.026 M-Attack [24] 7.2 0.509 2.9 0.459 4.9 0.518 2.7 0.354 7.7 0.318 1.8 0.364 FOA-Attack [21] 9.4 0.547 3.6 0.491 7.0 0.554 1.9 0.380 8.4 0.339 2.8 0.408 M-Attack-V2 [45] 12.8 0.620 7.5 0.567 8.7 0.618 3.4 0.449 10.0 0.396 6.7 0.483 
+
+FRA-Attack (Ours) 18.3 0.653 11.7 0.617 17.1 0.687 4.8 0.481 9.5 0.369 11.0 0.568 
+
+Table 21: Keyword Matching Rate (KMR, %) on the three closed-source standard victims and three open-source victims at strictness levels α, β, γ . Bold marks the strongest method per cell.                                                                                                
+
+> Method GPT-5.4 Claude-Opus-4.6 Gemini-3-flash Qwen3-VL-8B GLM-4.6V Llama-3.2-11B-V
+> αβγαβγαβγαβγαβγαβγ
+> M-Attack [24] 58.0 35.0 6.0 81.0 64.0 16.0 71.0 50.0 10.0 82.8 63.6 17.2 89.9 68.7 16.2 69.0 44.0 16.0 FOA-Attack [21] 58.0 34.0 12.0 83.0 67.0 23.0 71.0 46.0 10.0 82.8 70.7 23.2 86.9 64.6 23.2 72.0 53.0 15.0 M-Attack-V2 [45] 72.0 54.0 11.0 86.0 72.0 22.0 77.0 55.0 20.0 84.8 74.7 25.3 92.9 77.8 27.3 79.0 57.0 15.0
+> FRA-Attack (Ours) 73.0 52.0 20.0 92.0 76.0 28.0 83.0 64.0 21.0 89.9 75.8 30.3 88.9 76.8 28.3 80.0 68.0 17.0
+
+Figure 8: GPT-5.4 responses to FRA-Attack adversarial examples. 
+
+J.1 Low-Frequency DCT Components Encode Global Structure 
+
+We justify the claim made in Section 2.4 that low-frequency DCT components of the patch sequence carry global structure shared across patches, while high-frequency components carry patch-specific fine-grained semantics. 
+
+Setup. Let E = [ e0, . . . , eP −1]⊤ ∈ RP ×d denote the patch embeddings of an image, and let 
+
+Fk ∈ Rd denote the k-th Type-II DCT component along the token dimension defined in Eq. 2. Write the cosine basis as ψk(n) = cos[ π(n + 12 )k/P ], so that Fk = PP −1
+
+n=0 ψk(n) en.
+
+Claim 1 (DC component equals the global mean). The DC coefficient F0 is exactly P times the mean patch embedding: 
+
+F0 =
+
+P −1X
+
+n=0 
+
+ψ0(n) en =
+
+P −1X
+
+n=0 
+
+en = P ¯e, ¯e = 1
+
+P
+
+P −1X
+
+n=0 
+
+en. (9) 
+
+F0 is therefore the part of the patch sequence that is identical at every position, with no inter-patch variation. For low frequencies k ≈ 0 the basis ψk(n) varies slowly across n and acts as a smoothed running mean, so Fk remains dominated by the global content shared across patches. 22 Table 22: Attack performance of adversarial images against closed-source standard MLLMs after defense processing. ASR (%) / AvgSim under each defense on 100 source–target pairs. Defenses: JPEG quality 75 , Gaussian smoothing ( 5 × 5, σ = 0 .5), and center cropping ratio 0.9. Bold marks the best ASR per (defense, model) cell.                                                 
+
+> Defense Method Claude-Opus-4.6 GPT-5.4 Gemini-3-flash ASR AvgSim ASR AvgSim ASR AvgSim JPEG ( q=75 )M-Attack-V2 70.7 0.570 35.0 0.339 45.0 0.420
+> FRA-Attack 80.0 0.644 48.0 0.438 55.0 0.478
+> Gaussian ( σ=0 .5)M-Attack-V2 21.0 0.215 5.0 0.080 13.0 0.171
+> FRA-Attack 29.0 0.288 3.0 0.080 22.0 0.214
+> Center crop ( r=0 .9)M-Attack-V2 67.0 0.548 47.0 0.426 51.0 0.471
+> FRA-Attack 83.0 0.679 59.0 0.497 63.0 0.538
+
+Claim 2 (high-frequency components are orthogonal to the global mean). By the orthogonality of the Type-II DCT basis, for every k ≥ 1: 
+
+> P−1
+
+X
+
+> n=0
+
+ψk(n) = 0 . (10) A patch-uniform signal en ≡ c therefore yields Fk = c P 
+
+> n
+
+ψk(n) = 0 for all k ≥ 1. Equivalently, every Fk with k ≥ 1 is invariant to a constant shift of the patch sequence: replacing en with en + c
+
+leaves Fk unchanged. High-frequency components carry, by construction, no information about content shared identically across all patches. 
+
+Claim 3 (high-frequency components localize to inter-patch variation). The basis ψk(n) oscil-lates at angular frequency πk/P , and the per-step difference between adjacent samples satisfies 
+
+ψk(n + 1) − ψk(n) = −2 sin  πk 
+
+> 2P
+
+ sin 
+
+h πk (n+1) 
+
+> P
+
+i
+
+, (11) whose magnitude grows monotonically with k on [0 , P ]. Consequently Fk at large k behaves as a difference operator that responds primarily to inter-patch variation between neighbouring tokens, rather than to the slowly-varying global content captured by low-k components. 
+
+Implication for FRA-Attack. Claims 1–3 jointly justify the design choice in Section 2.4: aligning low-frequency DCT components would re-weigh the global mean already covered by the [CLS] 
+
+cosine, while the top-n high-frequency components carry the orthogonal, patch-wise signal that the global term cannot supply. The empirical confirmation is reported in Appendix D.3: the low/high split threshold θ is robust within ±0.7 ASR in the range [5 , 20] , consistent with a well-separated low/high band predicted by Claims 1 and 2. 
+
+J.2 Polynomial Decay Preserves DCT-Domain Phase Relations 
+
+We show that the continuous radial decay ϕ(d) = (1 − d)p used in FGR (Eq. 8) is equivalent to a separable, smooth filter applied in the spatial domain, and therefore preserves the relative magnitude and sign of every pair of input-gradient coefficients. In contrast, the per-band statistical clipping baseline (Section D.2) introduces hard thresholds at the band boundaries, which destroy the relative magnitude between coefficients on either side of a threshold; after the inverse DCT, this mismatch manifests as a direction-distorted spatial gradient. 
+
+Setup. Let ˆG ∈ RH×W denote the 2D DCT of the input gradient ∇ ∈ RH×W . Denote by 
+
+ϕ : [0 , 1] → [0 , 1] a non-negative measurable function and by d(u, v ) the radial distance defined in Eq. 7. The FGR-modulated coefficient at frequency (u, v ) is ˜Gu,v = ϕ(d(u, v )) · ˆGu,v .
+
+Lemma 1 (phase preservation). For any two coefficients (u1, v 1) and (u2, v 2) on the same radial circle, i.e. d(u1, v 1) = d(u2, v 2), the modulation by ϕ preserves the sign and the relative magnitude: 
+
+˜Gu1,v 1 / ˜Gu2,v 2 = ˆGu1,v 1 / ˆGu2,v 2 .
+
+Proof sketch. On the same circle, ϕ(d(u1, v 1)) = ϕ(d(u2, v 2)) , so the modulation factor cancels in the ratio. 23 Figure 9: Claude-Opus-4.6 responses to FRA-Attack adversarial examples. 
+
+Lemma 2 (monotone radial preservation). For any two coefficients on different radial circles, the modulation rescales their ratio by a known monotone factor that depends only on the two distances. The induced spatial-domain filter is real, even-symmetric, and non-negative. 24 Figure 10: Claude-Sonnet-4.6 responses to FRA-Attack adversarial examples. 
+
+Figure 11: Gemini-3-Flash responses to FRA-Attack adversarial examples. 
+
+Counterexample for per-band clipping. We give a constructive example showing that per-band statistical clipping breaks the relative magnitude of two coefficients with | ˆG| > μ B + γBσB that fall on opposite sides of a band boundary τl or τh. After the inverse DCT, the recovered spatial gradient differs from the polynomial-decay output not only in magnitude but also in direction (cosine similarity strictly less than 1). An empirical confirmation that polynomial decay outperforms statistical clipping is reported in Section D.2: polynomial (1 − d)1.5 improves over the no-FGR baseline by +6 .2 ASR points on the 
+
+6-victim panel, while per-band statistical clipping under-performs the same baseline by 0.1 ASR points. 25 Figure 12: Gemini-2.5-Flash responses to FRA-Attack adversarial examples. 
+
+J.3 Frequency-Domain OT Carries More Information than Spatial-Domain Clustering OT 
+
+We argue informally that the transport plan computed on top-n DCT components is more informative than the transport plan computed on n spatial-domain cluster centers, in the sense that it carries strictly more independent degrees of freedom for the same value of n.
+
+Setup. Let E ∈ RP ×d denote the patch embeddings of an image. Let Xclu ∈ Rn×d denote the n
+
+K-means cluster centers used by FOA-Attack, and let L ∈ Rn×d denote the top-n high-frequency DCT components used by FRA-Attack. 
+
+Argument. The DCT basis is orthogonal, so the n rows of L are mutually orthogonal projections of E. The n rows of Xclu , by contrast, are convex combinations of subsets of E and are mutually correlated (the cluster centers of close-by patches are close-by). When the OT cost matrix C
+
+is computed on rows that are mutually correlated, the entropy of the optimal transport plan π∗
+
+is artificially lower than its independent-rows counterpart, and the gradient that flows back from P 
+
+> a,b
+
+π∗
+
+> ab
+
+Cab to the input pixels has reduced effective rank. An empirical confirmation is reported in Section 3.3: replacing the spatial-domain clustering OT of FOA-Attack with the frequency-domain DCT OT used by FRA-Attack (with all other components matched in the v2 configuration) lifts the average ASR from 36 .5 (FOA-Attack) past 50 .0 (M-Attack-V2 fair) and on to 54 .9 for the DCT-only variant of FRA-Attack on the 1,000 -pair closed-source panel (Table 4). 
+
+K Reproducibility 
+
+Code release. The full implementation of FRA-Attack, the v2 reproduction of M-Attack-V2, the evaluation harness, and the configuration files for every table in this paper will be released at an anonymous repository upon acceptance. A double-blind anonymous mirror is provided to reviewers at submission time. 26 Hardware. All attacks and ablations run on a single node with 4× NVIDIA H200 GPUs . 
+
+Software. PyTorch (latest stable at time of submission), open_clip , and the standard scientific Python stack. A complete environment.yml and requirements.txt are included in the released repository. 
+
+Random seeds. Each attack is run with multiple independent seeds for the random-crop augmen-tation, the dynamic-weighting noise, and the optimizer state, with the source–target pair indices held fixed across seeds for strict comparability. Reported numbers in the main tables and figures are means across these seeds; per-seed fluctuation stays within ±2–3 ASR points (Section 3.1). Per-seed numbers and the seed list are provided in the released repository. 
+
+Reproduction commands. For each table in the main paper and the appendix, the released repos-itory ships a single shell script that regenerates the corresponding numbers end-to-end (attack, evaluation, table rendering). 27
